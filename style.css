@@ -1,0 +1,126 @@
+@import url('https://fonts.googleapis.com/css2?family=VT323&display=swap');
+
+:root {
+    --win-gray: #c0c0c0; --win-dark-gray: #808080;
+    --win-light: #ffffff; --win-dark: #000000;
+    --title-blue: #000080; --taskbar-bg: #c0c0c0;
+    --neon-pink: #ff00ff; --neon-cyan: #00ffff;
+}
+
+body {
+    margin: 0; padding: 0; overflow: hidden;
+    font-family: 'VT323', monospace; background-color: #0b0f19;
+    color: var(--win-dark); height: 100vh; user-select: none;
+    font-size: 20px; image-rendering: pixelated; cursor: crosshair;
+    transition: filter 0.5s ease;
+}
+
+.konami-mode { filter: hue-rotate(180deg) saturate(300%) invert(10%) contrast(150%); }
+.shake-mode { animation: screenShake 0.1s infinite alternate; }
+@keyframes screenShake {
+    0% { transform: translate(3px, 3px) rotate(0deg); }
+    100% { transform: translate(-3px, -3px) rotate(-1deg); }
+}
+
+#crt-overlay { position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.15) 50%); background-size: 100% 4px; pointer-events: none; z-index: 9999; animation: crtFlicker 0.15s infinite; }
+@keyframes crtFlicker { 0%, 100% { opacity: 0.95; } 50% { opacity: 0.90; } }
+
+#boot-screen { position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; background: black; color: var(--neon-cyan); display: flex; justify-content: center; align-items: center; font-size: 40px; z-index: 10000; cursor: pointer; }
+.blink { animation: blinker 1s linear infinite; }
+@keyframes blinker { 50% { opacity: 0; } }
+
+/* =========================================
+   SYNTHWAVE WALLPAPER
+========================================= */
+#desktop { position: relative; width: 100vw; height: calc(100vh - 40px); background: linear-gradient(to bottom, #090a0f 0%, #20124d 40%, #801a66 70%, #ff4d4d 100%); overflow: hidden; }
+#matrix-canvas { position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 4; display: none; opacity: 0.6; pointer-events: none; }
+
+.star { position: absolute; width: 2px; height: 2px; background: #fff; animation: twinkle linear infinite; border-radius: 50%; pointer-events: none;}
+.star:nth-child(even) { background: var(--neon-cyan); }
+.star:nth-child(3n) { background: var(--neon-pink); }
+@keyframes twinkle { 0%, 100% { opacity: 0.2; } 50% { opacity: 1; box-shadow: 0 0 5px currentColor; } }
+
+.shooting-star { position: absolute; width: 4px; height: 4px; background: #fff; box-shadow: -10px -5px 0 0 rgba(255,255,255,0.5), -20px -10px 0 0 rgba(255,255,255,0.2); top: -10px; right: 200px; opacity: 0; animation: shoot 8s linear infinite; pointer-events: none;}
+@keyframes shoot { 0% { transform: translate(0, 0); opacity: 1; } 10% { transform: translate(-500px, 250px); opacity: 0; } 100% { transform: translate(-500px, 250px); opacity: 0; } }
+
+#synth-sun { position: absolute; bottom: 80px; left: 50%; transform: translateX(-50%); width: 300px; height: 300px; border-radius: 50%; background: linear-gradient(to bottom, #ffea00 0%, #ff00ff 100%); box-shadow: 0 0 50px #ff00ff, 0 0 100px #ffea00; mask-image: repeating-linear-gradient(to bottom, black 0%, black 15px, transparent 15px, transparent 20px); -webkit-mask-image: repeating-linear-gradient(to bottom, black 0%, black 15px, transparent 15px, transparent 20px); z-index: 1; pointer-events: none;}
+
+.cloud { position: absolute; width: 60px; height: 15px; background: rgba(255, 100, 255, 0.2); box-shadow: 20px -15px 0 0 rgba(255, 100, 255, 0.2), 40px -10px 0 0 rgba(255, 100, 255, 0.2), 60px 0px 0 0 rgba(255, 100, 255, 0.2); animation: drift linear infinite; pointer-events: none; z-index: 2; }
+.cloud-1 { top: 150px; left: -100px; animation-duration: 40s; }
+.cloud-2 { top: 300px; left: -200px; animation-duration: 65s; transform: scale(1.5); }
+.cloud-3 { top: 80px; left: -300px; animation-duration: 30s; transform: scale(0.8); }
+@keyframes drift { from { transform: translateX(-150px); } to { transform: translateX(110vw); } }
+
+#ground { position: absolute; bottom: 0; left: 0; width: 100%; height: 120px; background: #0a0212; border-top: 3px solid var(--neon-pink); z-index: 3; overflow: hidden; perspective: 500px; pointer-events: none;}
+#grid-lines { position: absolute; top: 0; left: -50%; width: 200%; height: 200%; background-image: linear-gradient(var(--neon-pink) 2px, transparent 2px), linear-gradient(90deg, var(--neon-pink) 2px, transparent 2px); background-size: 50px 20px; transform: rotateX(60deg); animation: gridMove 1s linear infinite; opacity: 0.6; }
+@keyframes gridMove { 0% { transform: rotateX(60deg) translateY(0); } 100% { transform: rotateX(60deg) translateY(20px); } }
+
+#ufo { position: absolute; top: 30px; left: -100px; font-size: 30px; filter: drop-shadow(0 0 10px var(--neon-cyan)); transition: left 5s linear, top 2s ease-in-out; pointer-events: none; z-index: 100; }
+#desktop-pet { position: absolute; bottom: 120px; left: 20px; width: 24px; height: 16px; background: var(--neon-cyan); border-top-left-radius: 12px; border-top-right-radius: 12px; border-bottom: 2px solid #00aaaa; box-shadow: 0 0 10px var(--neon-cyan), inset -4px 0 0 rgba(0,0,0,0.2); z-index: 4998; cursor: pointer; animation: slimeSquish 1s infinite alternate; transition: left 3s linear; }
+#desktop-pet::before, #desktop-pet::after { content: ""; position: absolute; top: 6px; width: 4px; height: 4px; background: black; }
+#desktop-pet::before { left: 4px; } #desktop-pet::after { right: 4px; }
+@keyframes slimeSquish { 0% { transform: scaleY(1) scaleX(1) translateY(0); } 100% { transform: scaleY(0.8) scaleX(1.1) translateY(3px); } }
+
+.mouse-sparkle { position: absolute; width: 4px; height: 4px; background: var(--neon-cyan); pointer-events: none; z-index: 4997; animation: fadeOut 0.5s linear forwards; }
+.physics-spark { position: absolute; width: 6px; height: 6px; pointer-events: none; z-index: 4996; border: 1px solid black; }
+@keyframes fadeOut { 0% { opacity: 1; transform: scale(1); } 100% { opacity: 0; transform: scale(0.2) translateY(10px); } }
+
+/* =========================================
+   WINDOWS & ICONS
+========================================= */
+.window { position: absolute; background: var(--win-gray); border-top: 2px solid var(--win-light); border-left: 2px solid var(--win-light); border-right: 2px solid var(--win-dark); border-bottom: 2px solid var(--win-dark); box-shadow: 2px 2px 10px rgba(0,0,0,0.8); display: flex; flex-direction: column; }
+.title-bar { background: linear-gradient(90deg, #000080, #ff00ff); color: white; padding: 3px 3px 3px 5px; display: flex; justify-content: space-between; align-items: center; cursor: move; }
+.title-bar-text { font-weight: bold; letter-spacing: 1px; pointer-events: none; text-shadow: 1px 1px 0 #000; }
+.title-bar-controls button { width: 18px; height: 18px; background: var(--win-gray); border-top: 1px solid var(--win-light); border-left: 1px solid var(--win-light); border-right: 1px solid var(--win-dark); border-bottom: 1px solid var(--win-dark); cursor: pointer; font-family: 'VT323', monospace; display: inline-flex; justify-content: center; align-items: center; padding: 0; font-size: 14px; margin-left: 2px; }
+.title-bar-controls button:active { border-top: 1px solid var(--win-dark); border-left: 1px solid var(--win-dark); border-right: 1px solid var(--win-light); border-bottom: 1px solid var(--win-light); background: #e0e0e0; }
+.title-bar-controls .close-btn::before { content: "X"; }
+.window-body { padding: 15px; background: #fffff0; border: 2px inset var(--win-gray); margin: 5px; flex-grow: 1; overflow-y: auto; cursor: default; }
+
+.icon { position: absolute; display: flex; flex-direction: column; align-items: center; cursor: pointer; color: white; text-shadow: 2px 2px 0 #000; width: 80px; z-index: 5; }
+.icon .icon-img { font-size: 40px; margin-bottom: 5px; pointer-events: none; filter: drop-shadow(2px 2px 0 rgba(0,0,0,0.5)); }
+.icon span { pointer-events: none; text-align: center; background: rgba(0,0,0,0.6); padding: 2px 6px; border-radius: 4px; font-size: 18px;}
+.icon:active span { background-color: var(--title-blue); color: white; border: 1px dotted white; }
+
+.win-btn { font-family: 'VT323', monospace; font-size: 20px; padding: 5px 15px; background: var(--win-gray); border-top: 2px solid var(--win-light); border-left: 2px solid var(--win-light); border-right: 2px solid var(--win-dark); border-bottom: 2px solid var(--win-dark); cursor: pointer; font-weight: bold; text-decoration: none; display: inline-block; color: black; margin-top: 5px;}
+.win-btn:active { border-top: 2px solid var(--win-dark); border-left: 2px solid var(--win-dark); border-right: 2px solid var(--win-light); border-bottom: 2px solid var(--win-light); padding: 6px 14px 4px 16px; }
+
+/* Window Specific Content */
+.status-layout { display: flex; gap: 20px; align-items: flex-start; }
+.avatar-box { width: 100px; height: 100px; border: 2px solid var(--win-dark-gray); background: #ccc; flex-shrink: 0;}
+.avatar-box img { width: 100%; height: 100%; object-fit: cover; }
+.status-text p { margin: 5px 0; font-size: 22px; }
+
+/* Skills Specific */
+.skill-category { margin-bottom: 15px; }
+.skill-category strong { color: var(--title-blue); font-size: 24px; text-decoration: underline; }
+.skill-list { margin: 5px 0 0 0; padding-left: 20px; line-height: 1.5; font-size: 20px; }
+
+.project-item { display: flex; gap: 15px; margin-bottom: 15px; border-bottom: 1px dotted var(--win-dark-gray); padding-bottom: 10px; cursor: pointer; }
+.project-item:hover { background-color: #e0e0e0; }
+.project-item:active { background-color: var(--title-blue); color: white; }
+.proj-icon { font-size: 30px; }
+.proj-details strong { font-size: 22px; }
+.proj-details p { margin: 5px 0 0 0; font-size: 18px; pointer-events: none;}
+
+/* Color Palette for Paint */
+.color-swatch { width: 24px; height: 24px; border: 2px inset var(--win-gray); cursor: pointer; }
+.color-swatch.active { border: 2px solid black; transform: scale(1.1); }
+
+/* =========================================
+   TASKBAR & START MENU
+========================================= */
+#taskbar { position: absolute; bottom: 0; width: 100%; height: 40px; background: var(--taskbar-bg); border-top: 2px solid var(--win-light); display: flex; align-items: center; padding: 0 5px; box-sizing: border-box; z-index: 5000; }
+#start-btn { font-family: 'VT323', monospace; font-size: 22px; font-weight: bold; padding: 2px 8px; margin-right: 10px; background: var(--win-gray); border-top: 2px solid var(--win-light); border-left: 2px solid var(--win-light); border-right: 2px solid var(--win-dark); border-bottom: 2px solid var(--win-dark); cursor: pointer; display: flex; align-items: center; }
+#start-btn:active, #start-btn.active { border-top: 2px solid var(--win-dark); border-left: 2px solid var(--win-dark); border-right: 2px solid var(--win-light); border-bottom: 2px solid var(--win-light); padding: 3px 7px 1px 9px; background: #e0e0e0; }
+.taskbar-divider { width: 2px; height: 30px; background: var(--win-dark-gray); border-right: 1px solid var(--win-light); margin: 0 10px; }
+#clock { margin-left: auto; padding: 2px 10px; border: 2px inset var(--win-light); }
+
+#start-menu { position: absolute; bottom: 40px; left: 0; width: 250px; background: var(--win-gray); border-top: 2px solid var(--win-light); border-left: 2px solid var(--win-light); border-right: 2px solid var(--win-dark); border-bottom: 2px solid var(--win-dark); display: flex; z-index: 4999; box-shadow: 2px 2px 5px rgba(0,0,0,0.5); }
+.start-menu-sidebar { width: 30px; background: linear-gradient(to top, #000080, #ff00ff); color: white; display: flex; align-items: flex-end; padding-bottom: 10px; }
+.start-menu-sidebar span { transform: rotate(-90deg); transform-origin: left bottom; white-space: nowrap; font-size: 24px; font-weight: bold; margin-left: 25px; }
+.start-menu-items { flex-grow: 1; padding: 5px; }
+.start-item { padding: 10px; cursor: pointer; font-size: 22px; }
+.start-item:hover { background: var(--title-blue); color: white; }
+.start-divider { height: 2px; background: var(--win-dark-gray); border-bottom: 1px solid var(--win-light); margin: 5px 0; }
+
+#cmd-output div { margin-bottom: 4px; }
