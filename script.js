@@ -1,7 +1,5 @@
-// ======================================================================
-// 📝 YOUR PERSONAL DATA CONFIGURATION
-// Everything is dynamic! Edit this block to update your OS instantly.
-// ======================================================================
+//PERSONAL DATA CONFIGURATION
+
 const PORTFOLIO_DATA = {
     profile: {
         name: "ADARSH SEN",
@@ -77,9 +75,9 @@ const PORTFOLIO_DATA = {
     ]
 };
 
-// ======================================================================
+
 // SYSTEM LOGIC
-// ======================================================================
+
 document.addEventListener('DOMContentLoaded', () => {
 
     // --- GLOBAL VARIABLES ---
