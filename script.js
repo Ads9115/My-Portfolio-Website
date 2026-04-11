@@ -67,7 +67,7 @@ const PORTFOLIO_DATA = {
         }
     ],
     socials: [
-        { label: "📧 SEND EMAIL", link: "mailto:adarshsen9115@gmail.com" },
+        { label: "📧 GMAIL - adarshsen9115@gmail.com", link: "https://mail.google.com/mail/?view=cm&fs=1&to=adarshsen9115@gmail.com" },
         { label: "🐙 GITHUB", link: "https://github.com/Ads9115" },
         { label: "💼 LINKEDIN", link: "https://www.linkedin.com/in/adarsh-sen-b5748934a/" },
         { label: "🐦 TWITTER / X", link: "https://x.com/CrumblingBrud" },
@@ -88,6 +88,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let isPhysicsRunning = false;
     let isMatrixRunning = false;
     let matrixInterval = null;
+    let matrixResizeHandler = null;
     let sparks = [];
 
     // --- SINGLE GLOBAL DRAG STATE ---
@@ -213,7 +214,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Social Links
         let contactHtml = "";
         PORTFOLIO_DATA.socials.forEach(social => {
-            contactHtml += `<a href="${social.link}" target="_blank" class="win-btn">${social.label}</a>`;
+            contactHtml += `<a href="${social.link}" target="_blank" rel="noopener noreferrer" class="win-btn">${social.label}</a>`;
         });
         const injectContact = document.getElementById('inject-contact');
         if(injectContact) injectContact.innerHTML = contactHtml;
@@ -390,7 +391,9 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!win.classList.contains('maximized')) {
                 preMax = { top: win.style.top, left: win.style.left, width: win.style.width, height: win.style.height };
                 win.style.top = '0'; win.style.left = '0';
-                win.style.width = '100vw'; win.style.height = 'calc(100vh - 40px)';
+                win.style.width = '100vw';
+                win.style.height = 'calc(100vh - 40px)';
+                win.style.height = 'calc(100dvh - 40px)';
                 win.classList.add('maximized');
             } else {
                 win.style.top = preMax.top; win.style.left = preMax.left;
@@ -498,7 +501,15 @@ document.addEventListener('DOMContentLoaded', () => {
                 isMatrixRunning = !isMatrixRunning;
                 const mc = document.getElementById('matrix-canvas');
                 if (isMatrixRunning) { printCmd('Matrix override initiated.', '#00ffff'); mc.style.display = 'block'; startMatrix(mc); }
-                else { printCmd('Matrix override terminated.', '#ff0000'); mc.style.display = 'none'; clearInterval(matrixInterval); }
+                else {
+                    printCmd('Matrix override terminated.', '#ff0000');
+                    mc.style.display = 'none';
+                    clearInterval(matrixInterval);
+                    if (matrixResizeHandler) {
+                        window.removeEventListener('resize', matrixResizeHandler);
+                        matrixResizeHandler = null;
+                    }
+                }
             } else if (val) {
                 printCmd("'" + val + "' is not recognized as an internal or external command.", '#ff0000');
             }
@@ -507,10 +518,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function startMatrix(canvas) {
         const ctx = canvas.getContext('2d');
-        canvas.width = window.innerWidth; canvas.height = window.innerHeight;
         const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789$+-*/=%"\'#&_(),.;:?!\\|{}<>[]^~';
         const fs = 16;
-        const drops = Array.from({ length: Math.floor(canvas.width / fs) }, () => 1);
+        let drops = [];
+
+        if (matrixResizeHandler) window.removeEventListener('resize', matrixResizeHandler);
+        matrixResizeHandler = () => {
+            const desktopArea = document.getElementById('desktop');
+            canvas.width = desktopArea ? desktopArea.clientWidth : window.innerWidth;
+            canvas.height = desktopArea ? desktopArea.clientHeight : (window.innerHeight - 40);
+            drops = Array.from({ length: Math.floor(canvas.width / fs) }, () => 1);
+        };
+        matrixResizeHandler();
+        window.addEventListener('resize', matrixResizeHandler);
         matrixInterval = setInterval(() => {
             ctx.fillStyle = 'rgba(0,0,0,0.05)'; ctx.fillRect(0, 0, canvas.width, canvas.height);
             ctx.fillStyle = '#0F0'; ctx.font = fs + 'px monospace';

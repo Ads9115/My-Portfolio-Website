@@ -5,12 +5,14 @@
     --win-light: #ffffff; --win-dark: #000000;
     --title-blue: #000080; --taskbar-bg: #c0c0c0;
     --neon-pink: #ff00ff; --neon-cyan: #00ffff;
+    --ground-height: 96px;
+    --horizon-thickness: 3px;
 }
 
 body {
     margin: 0; padding: 0; overflow: hidden;
     font-family: 'VT323', monospace; background-color: #0b0f19;
-    color: var(--win-dark); height: 100vh; user-select: none;
+    color: var(--win-dark); height: 100vh; height: 100dvh; user-select: none;
     font-size: 20px; image-rendering: pixelated; cursor: crosshair;
     transition: filter 0.5s ease;
 }
@@ -32,8 +34,8 @@ body {
 /* 
    SYNTHWAVE WALLPAPER
  */
-#desktop { position: relative; width: 100vw; height: calc(100vh - 40px); background: linear-gradient(to bottom, #090a0f 0%, #20124d 40%, #801a66 70%, #ff4d4d 100%); overflow: hidden; }
-#matrix-canvas { position: absolute; top: 0; left: 0; width: 100vw; height: 100vh; z-index: 4; display: none; opacity: 0.6; pointer-events: none; }
+#desktop { position: relative; width: 100%; height: calc(100vh - 40px); height: calc(100dvh - 40px); background: linear-gradient(to bottom, #090a0f 0%, #20124d 40%, #801a66 70%, #ff4d4d 100%); overflow: hidden; }
+#matrix-canvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 4; display: none; opacity: 0.6; pointer-events: none; }
 
 .star { position: absolute; width: 2px; height: 2px; background: #fff; animation: twinkle linear infinite; border-radius: 50%; pointer-events: none;}
 .star:nth-child(even) { background: var(--neon-cyan); }
@@ -51,12 +53,12 @@ body {
 .cloud-3 { top: 80px; left: -300px; animation-duration: 30s; transform: scale(0.8); }
 @keyframes drift { from { transform: translateX(-150px); } to { transform: translateX(110vw); } }
 
-#ground { position: absolute; bottom: 0; left: 0; width: 100%; height: 120px; background: #0a0212; border-top: 3px solid var(--neon-pink); z-index: 3; overflow: hidden; perspective: 500px; pointer-events: none;}
-#grid-lines { position: absolute; top: 0; left: -50%; width: 200%; height: 200%; background-image: linear-gradient(var(--neon-pink) 2px, transparent 2px), linear-gradient(90deg, var(--neon-pink) 2px, transparent 2px); background-size: 50px 20px; transform: rotateX(60deg); animation: gridMove 1s linear infinite; opacity: 0.6; }
-@keyframes gridMove { 0% { transform: rotateX(60deg) translateY(0); } 100% { transform: rotateX(60deg) translateY(20px); } }
+#ground { position: absolute; bottom: 0; left: 0; width: 100%; height: var(--ground-height); box-sizing: border-box; background: #000; border-top: var(--horizon-thickness) solid var(--neon-pink); z-index: 3; overflow: hidden; perspective: 500px; pointer-events: none;}
+#grid-lines { position: absolute; top: calc(-1 * var(--horizon-thickness)); left: -50%; width: 200%; height: 220%; background-image: linear-gradient(var(--neon-pink) 2px, transparent 2px), linear-gradient(90deg, var(--neon-pink) 2px, transparent 2px); background-size: 50px 20px; transform-origin: top center; transform: rotateX(64deg) translateY(0); animation: gridMove 1s linear infinite; opacity: 0.75; }
+@keyframes gridMove { 0% { transform: rotateX(64deg) translateY(0); } 100% { transform: rotateX(64deg) translateY(20px); } }
 
 #ufo { position: absolute; top: 30px; left: -100px; font-size: 30px; filter: drop-shadow(0 0 10px var(--neon-cyan)); transition: left 5s linear, top 2s ease-in-out; pointer-events: none; z-index: 100; }
-#desktop-pet { position: absolute; bottom: 120px; left: 20px; width: 24px; height: 16px; background: var(--neon-cyan); border-top-left-radius: 12px; border-top-right-radius: 12px; border-bottom: 2px solid #00aaaa; box-shadow: 0 0 10px var(--neon-cyan), inset -4px 0 0 rgba(0,0,0,0.2); z-index: 4998; cursor: pointer; animation: slimeSquish 1s infinite alternate; transition: left 3s linear; }
+#desktop-pet { position: absolute; bottom: var(--ground-height); left: 20px; width: 24px; height: 16px; background: var(--neon-cyan); border-top-left-radius: 12px; border-top-right-radius: 12px; border-bottom: 2px solid #00aaaa; box-shadow: 0 0 10px var(--neon-cyan), inset -4px 0 0 rgba(0,0,0,0.2); z-index: 6; cursor: pointer; animation: slimeSquish 1s infinite alternate; transition: left 3s linear; }
 #desktop-pet::before, #desktop-pet::after { content: ""; position: absolute; top: 6px; width: 4px; height: 4px; background: black; }
 #desktop-pet::before { left: 4px; } #desktop-pet::after { right: 4px; }
 @keyframes slimeSquish { 0% { transform: scaleY(1) scaleX(1) translateY(0); } 100% { transform: scaleY(0.8) scaleX(1.1) translateY(3px); } }
@@ -89,6 +91,7 @@ body {
 .avatar-box { width: 100px; height: 100px; border: 2px solid var(--win-dark-gray); background: #ccc; flex-shrink: 0;}
 .avatar-box img { width: 100%; height: 100%; object-fit: cover; }
 .status-text p { margin: 5px 0; font-size: 22px; }
+.contact-window-icon { width: 80px; margin-bottom: 15px; image-rendering: auto; filter: drop-shadow(0 0 6px rgba(0, 0, 0, 0.35)); }
 
 /* Skills Specific */
 .skill-category { margin-bottom: 15px; }
@@ -109,13 +112,13 @@ body {
 
 /* TASKBAR & START MENU */
 
-#taskbar { position: absolute; bottom: 0; width: 100%; height: 40px; background: var(--taskbar-bg); border-top: 2px solid var(--win-light); display: flex; align-items: center; padding: 0 5px; box-sizing: border-box; z-index: 5000; }
+#taskbar { position: fixed; left: 0; bottom: 0; width: 100%; height: 40px; background: var(--taskbar-bg); border-top: 2px solid var(--win-light); display: flex; align-items: center; padding: 0 5px; box-sizing: border-box; z-index: 5000; }
 #start-btn { font-family: 'VT323', monospace; font-size: 22px; font-weight: bold; padding: 2px 8px; margin-right: 10px; background: var(--win-gray); border-top: 2px solid var(--win-light); border-left: 2px solid var(--win-light); border-right: 2px solid var(--win-dark); border-bottom: 2px solid var(--win-dark); cursor: pointer; display: flex; align-items: center; }
 #start-btn:active, #start-btn.active { border-top: 2px solid var(--win-dark); border-left: 2px solid var(--win-dark); border-right: 2px solid var(--win-light); border-bottom: 2px solid var(--win-light); padding: 3px 7px 1px 9px; background: #e0e0e0; }
 .taskbar-divider { width: 2px; height: 30px; background: var(--win-dark-gray); border-right: 1px solid var(--win-light); margin: 0 10px; }
 #clock { margin-left: auto; padding: 2px 10px; border: 2px inset var(--win-light); }
 
-#start-menu { position: absolute; bottom: 40px; left: 0; width: 250px; background: var(--win-gray); border-top: 2px solid var(--win-light); border-left: 2px solid var(--win-light); border-right: 2px solid var(--win-dark); border-bottom: 2px solid var(--win-dark); display: flex; z-index: 4999; box-shadow: 2px 2px 5px rgba(0,0,0,0.5); }
+#start-menu { position: absolute; bottom: 0; left: 0; width: 250px; background: var(--win-gray); border-top: 2px solid var(--win-light); border-left: 2px solid var(--win-light); border-right: 2px solid var(--win-dark); border-bottom: 2px solid var(--win-dark); display: flex; z-index: 4999; box-shadow: 2px 2px 5px rgba(0,0,0,0.5); }
 .start-menu-sidebar { width: 30px; background: linear-gradient(to top, #000080, #ff00ff); color: white; display: flex; align-items: flex-end; padding-bottom: 10px; }
 .start-menu-sidebar span { transform: rotate(-90deg); transform-origin: left bottom; white-space: nowrap; font-size: 24px; font-weight: bold; margin-left: 25px; }
 .start-menu-items { flex-grow: 1; padding: 5px; }

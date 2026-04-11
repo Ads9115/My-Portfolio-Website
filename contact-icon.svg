@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Retro mail icon">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#12192d"/>
+      <stop offset="100%" stop-color="#090d1a"/>
+    </linearGradient>
+  </defs>
+  <rect x="3" y="3" width="58" height="58" rx="10" fill="url(#bg)" stroke="#00efff" stroke-width="4"/>
+  <rect x="13" y="19" width="38" height="27" rx="4" fill="#11182d" stroke="#ff2f98" stroke-width="3"/>
+  <path d="M13 24 L32 38 L51 24" fill="none" stroke="#00efff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M13 44 L24.5 32" fill="none" stroke="#00efff" stroke-width="3" stroke-linecap="round"/>
+  <path d="M51 44 L39.5 32" fill="none" stroke="#00efff" stroke-width="3" stroke-linecap="round"/>
+  <circle cx="51" cy="13" r="4" fill="#ffe24d"/>
+</svg>
