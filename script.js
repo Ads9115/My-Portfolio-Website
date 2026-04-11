@@ -85,10 +85,29 @@ document.addEventListener('DOMContentLoaded', () => {
     let audioCtx = null;
     let isBouncing = false;
     let isRendering3D = false;
+    let isPongRunning = false;
+    let isWindowGravityOn = false;
     let isPhysicsRunning = false;
     let isMatrixRunning = false;
     let matrixInterval = null;
     let matrixResizeHandler = null;
+    let pongLoopId = null;
+    let gravityLoopId = null;
+    const windowBodies = new Map();
+    const iconBodies = new Map();
+    const initialIconPositions = new Map();
+    const iconReturnPositions = new Map();
+    const WINDOW_GRAVITY = 0.55;
+    const WINDOW_BOUNCE = 0.45;
+    const WINDOW_SIDE_BOUNCE = 0.55;
+    const WINDOW_FRICTION = 0.985;
+    const ICON_GRAVITY = 0.5;
+    const ICON_BOUNCE = 0.38;
+    const ICON_SIDE_BOUNCE = 0.5;
+    const ICON_FRICTION = 0.98;
+    const TASKBAR_HEIGHT = 40;
+    const ufoMinTop = 36;
+    const ufoMaxTop = 220;
     let sparks = [];
 
     // --- SINGLE GLOBAL DRAG STATE ---
@@ -100,6 +119,202 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!el) return;
         highestZIndex++;
         el.style.zIndex = highestZIndex;
+    }
+
+    function getWindowBody(win) {
+        let body = windowBodies.get(win);
+        if (!body) {
+            body = { x: win.offsetLeft, y: win.offsetTop, vx: 0, vy: 0 };
+            windowBodies.set(win, body);
+        }
+        return body;
+    }
+
+    function syncBodyFromElement(win) {
+        const body = getWindowBody(win);
+        body.x = win.offsetLeft;
+        body.y = win.offsetTop;
+        return body;
+    }
+
+    function getIconBody(icon) {
+        let body = iconBodies.get(icon);
+        if (!body) {
+            body = { x: icon.offsetLeft, y: icon.offsetTop, vx: 0, vy: 0 };
+            iconBodies.set(icon, body);
+        }
+        return body;
+    }
+
+    function syncIconBodyFromElement(icon) {
+        const body = getIconBody(icon);
+        body.x = icon.offsetLeft;
+        body.y = icon.offsetTop;
+        return body;
+    }
+
+    function captureInitialIconPositions() {
+        document.querySelectorAll('.icon').forEach(icon => {
+            if (initialIconPositions.has(icon)) return;
+            const left = Number.isFinite(parseFloat(icon.style.left)) ? parseFloat(icon.style.left) : icon.offsetLeft;
+            const top = Number.isFinite(parseFloat(icon.style.top)) ? parseFloat(icon.style.top) : icon.offsetTop;
+            initialIconPositions.set(icon, { left, top });
+        });
+    }
+
+    function snapshotIconReturnPositions() {
+        iconReturnPositions.clear();
+        document.querySelectorAll('.icon').forEach(icon => {
+            const left = Number.isFinite(parseFloat(icon.style.left)) ? parseFloat(icon.style.left) : icon.offsetLeft;
+            const top = Number.isFinite(parseFloat(icon.style.top)) ? parseFloat(icon.style.top) : icon.offsetTop;
+            iconReturnPositions.set(icon, { left, top });
+        });
+    }
+
+    function restoreIconsToSavedPositions() {
+        const mapToUse = iconReturnPositions.size ? iconReturnPositions : initialIconPositions;
+        document.querySelectorAll('.icon').forEach(icon => {
+            const pos = mapToUse.get(icon);
+            if (!pos) return;
+            icon.style.left = `${pos.left}px`;
+            icon.style.top = `${pos.top}px`;
+            iconBodies.delete(icon);
+        });
+    }
+
+    function startWindowGravity() {
+        if (isWindowGravityOn) return;
+        isWindowGravityOn = true;
+        snapshotIconReturnPositions();
+        document.querySelectorAll('.window').forEach(win => {
+            if (win.style.display !== 'none' && !win.classList.contains('maximized')) {
+                const body = syncBodyFromElement(win);
+                body.vx = 0;
+                body.vy = 0;
+            }
+        });
+        document.querySelectorAll('.icon').forEach(icon => {
+            const body = syncIconBodyFromElement(icon);
+            body.vx = 0;
+            body.vy = 0;
+        });
+        runWindowGravity();
+    }
+
+    function stopWindowGravity() {
+        isWindowGravityOn = false;
+        if (gravityLoopId) {
+            cancelAnimationFrame(gravityLoopId);
+            gravityLoopId = null;
+        }
+        windowBodies.clear();
+        iconBodies.clear();
+    }
+
+    function runWindowGravity() {
+        if (!isWindowGravityOn) return;
+        const floorY = window.innerHeight - TASKBAR_HEIGHT;
+        const maxX = window.innerWidth;
+
+        document.querySelectorAll('.window').forEach(win => {
+            if (win.style.display === 'none' || win.classList.contains('maximized')) {
+                windowBodies.delete(win);
+                return;
+            }
+
+            const body = getWindowBody(win);
+            if (dragEl === win) {
+                body.x = win.offsetLeft;
+                body.y = win.offsetTop;
+                body.vx = 0;
+                body.vy = 0;
+                return;
+            }
+
+            body.vy += WINDOW_GRAVITY;
+            body.x += body.vx;
+            body.y += body.vy;
+
+            const w = win.offsetWidth;
+            const h = win.offsetHeight;
+
+            if (body.x < 0) {
+                body.x = 0;
+                body.vx = Math.abs(body.vx) * WINDOW_SIDE_BOUNCE;
+            }
+
+            if (body.x + w > maxX) {
+                body.x = Math.max(0, maxX - w);
+                body.vx = -Math.abs(body.vx) * WINDOW_SIDE_BOUNCE;
+            }
+
+            if (body.y < 0) {
+                body.y = 0;
+                body.vy = Math.abs(body.vy) * WINDOW_BOUNCE;
+            }
+
+            if (body.y + h > floorY) {
+                body.y = floorY - h;
+                body.vy = -Math.abs(body.vy) * WINDOW_BOUNCE;
+                body.vx *= 0.9;
+                if (Math.abs(body.vy) < 0.8) body.vy = 0;
+            }
+
+            body.vx *= WINDOW_FRICTION;
+            if (Math.abs(body.vx) < 0.05) body.vx = 0;
+
+            win.style.left = `${body.x}px`;
+            win.style.top = `${body.y}px`;
+        });
+
+        document.querySelectorAll('.icon').forEach(icon => {
+            const body = getIconBody(icon);
+
+            if (dragEl === icon) {
+                body.x = icon.offsetLeft;
+                body.y = icon.offsetTop;
+                body.vx = 0;
+                body.vy = 0;
+                return;
+            }
+
+            body.vy += ICON_GRAVITY;
+            body.x += body.vx;
+            body.y += body.vy;
+
+            const w = icon.offsetWidth;
+            const h = icon.offsetHeight;
+
+            if (body.x < 0) {
+                body.x = 0;
+                body.vx = Math.abs(body.vx) * ICON_SIDE_BOUNCE;
+            }
+
+            if (body.x + w > maxX) {
+                body.x = Math.max(0, maxX - w);
+                body.vx = -Math.abs(body.vx) * ICON_SIDE_BOUNCE;
+            }
+
+            if (body.y < 0) {
+                body.y = 0;
+                body.vy = Math.abs(body.vy) * ICON_BOUNCE;
+            }
+
+            if (body.y + h > floorY) {
+                body.y = floorY - h;
+                body.vy = -Math.abs(body.vy) * ICON_BOUNCE;
+                body.vx *= 0.92;
+                if (Math.abs(body.vy) < 0.65) body.vy = 0;
+            }
+
+            body.vx *= ICON_FRICTION;
+            if (Math.abs(body.vx) < 0.04) body.vx = 0;
+
+            icon.style.left = `${body.x}px`;
+            icon.style.top = `${body.y}px`;
+        });
+
+        gravityLoopId = requestAnimationFrame(runWindowGravity);
     }
 
     document.addEventListener('mousemove', (e) => {
@@ -269,10 +484,13 @@ document.addEventListener('DOMContentLoaded', () => {
     if (ufo) {
         setInterval(() => {
             if (Math.random() > 0.9) {
-                ufo.style.transition = 'none'; ufo.style.left = '-100px'; ufo.style.top  = (Math.random() * 200) + 'px';
+                ufo.style.transition = 'none';
+                ufo.style.left = '-140px';
+                ufo.style.top = (Math.random() * (ufoMaxTop - ufoMinTop) + ufoMinTop) + 'px';
                 setTimeout(() => {
                     ufo.style.transition = 'left 8s linear, top 4s ease-in-out';
-                    ufo.style.left = (window.innerWidth + 100) + 'px'; ufo.style.top  = (Math.random() * 200) + 'px';
+                    ufo.style.left = (window.innerWidth + 140) + 'px';
+                    ufo.style.top = (Math.random() * (ufoMaxTop - ufoMinTop) + ufoMinTop) + 'px';
                 }, 50);
             }
         }, 10000);
@@ -380,10 +598,14 @@ document.addEventListener('DOMContentLoaded', () => {
             e.stopPropagation(); win.style.display = 'none';
             if (win.id === 'window-bouncer') isBouncing = false;
             if (win.id === 'window-cube')    isRendering3D = false;
+            if (win.id === 'window-pong')    stopPongGame();
+            windowBodies.delete(win);
         });
 
         if (minBtn) minBtn.addEventListener('click', (e) => {
             e.stopPropagation(); sfx.minimize(); win.style.display = 'none';
+            if (win.id === 'window-pong') stopPongGame();
+            windowBodies.delete(win);
         });
 
         if (maxBtn) maxBtn.addEventListener('click', (e) => {
@@ -395,10 +617,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 win.style.height = 'calc(100vh - 40px)';
                 win.style.height = 'calc(100dvh - 40px)';
                 win.classList.add('maximized');
+                windowBodies.delete(win);
             } else {
                 win.style.top = preMax.top; win.style.left = preMax.left;
                 win.style.width = preMax.width; win.style.height = preMax.height;
                 win.classList.remove('maximized');
+                if (isWindowGravityOn) {
+                    const body = syncBodyFromElement(win);
+                    body.vx = 0;
+                    body.vy = 0;
+                }
             }
         });
     });
@@ -408,8 +636,14 @@ document.addEventListener('DOMContentLoaded', () => {
         const win = document.getElementById(targetId);
         if (!win) return;
         win.style.display = 'flex'; bringToFront(win); sfx.open();
+        if (isWindowGravityOn && !win.classList.contains('maximized')) {
+            const body = syncBodyFromElement(win);
+            body.vx = 0;
+            body.vy = Math.max(body.vy, 1.2);
+        }
         if (win.id === 'window-bouncer' && !isBouncing)    { isBouncing    = true; animateLogo(); }
         if (win.id === 'window-cube'    && !isRendering3D) { isRendering3D = true; renderCube();  }
+        if (win.id === 'window-pong'    && !isPongRunning) { startPongGame(); }
         if (win.id === 'window-cmd') { const i = document.getElementById('cmd-input'); if (i) i.focus(); }
     }
 
@@ -426,6 +660,7 @@ document.addEventListener('DOMContentLoaded', () => {
             openWindow(icon.getAttribute('data-target'));
         });
     });
+    captureInitialIconPositions();
 
     // --- START MENU ---
     const startBtn  = document.getElementById('start-btn');
@@ -473,22 +708,36 @@ document.addEventListener('DOMContentLoaded', () => {
             cmdInput.value = '';
             if (val === 'help') {
                 ['Available commands:','- help      : Shows this menu','- matrix    : Toggles matrix override',
-                 '- hack      : Bypasses mainframe security','- shake     : Simulates hardware failure',
+                 '- gravity on: Enable window and icon gravity physics',
+                 '- gravity off: Disable window and icon gravity physics',
+                 '- shake     : Simulates hardware failure',
                  '- clear     : Clears terminal output','- blackhole : [CLASSIFIED]'].forEach(l => printCmd(l));
             } else if (val === 'clear') {
                 cmdOutput.innerHTML = '';
+            } else if (val === 'gravity on') {
+                if (!isWindowGravityOn) {
+                    startWindowGravity();
+                    printCmd('Window and icon gravity enabled. Physics engine online.', '#00ffff');
+                    playTone(240, 'sawtooth', 0.08, 0.05);
+                } else {
+                    printCmd('Window gravity is already enabled.', '#ffff00');
+                }
+            } else if (val === 'gravity off') {
+                if (isWindowGravityOn) {
+                    stopWindowGravity();
+                    restoreIconsToSavedPositions();
+                    printCmd('Window and icon gravity disabled. Icons restored.', '#ffff00');
+                    playTone(420, 'triangle', 0.08, 0.04);
+                } else {
+                    printCmd('Window gravity is already disabled.', '#ffff00');
+                }
+            } else if (val === 'gravity') {
+                printCmd('Usage: gravity on | gravity off', '#00ffff');
             } else if (val === 'shake') {
                 document.body.classList.add('shake-mode');
                 playTone(100, 'sawtooth', 1.0, 0.2);
                 setTimeout(() => document.body.classList.remove('shake-mode'), 1000);
                 printCmd('Hardware failure simulated.', '#ffff00');
-            } else if (val === 'hack') {
-                printCmd('Initializing bypass...', '#ffff00');
-                let count = 0;
-                const hi = setInterval(() => {
-                    printCmd('[' + Math.random().toString(36).substring(2,10) + '] Unpacking payload...');
-                    if (++count > 5) { clearInterval(hi); printCmd('ACCESS GRANTED.', '#00ffff'); }
-                }, 300);
             } else if (val === 'blackhole') {
                 printCmd('WARNING: GRAVITY ANOMALY DETECTED.', '#ff0000');
                 document.querySelectorAll('.icon, .window').forEach(el => {
@@ -586,6 +835,189 @@ document.addEventListener('DOMContentLoaded', () => {
             logo.style.left = lx + 'px'; logo.style.top = ly + 'px';
             requestAnimationFrame(bounce);
         })();
+    }
+
+    // --- PONG MINI-GAME ---
+    function clamp(v, min, max) {
+        return Math.min(max, Math.max(min, v));
+    }
+
+    const pong = {
+        canvas: null,
+        ctx: null,
+        playerX: 0,
+        aiX: 0,
+        playerWidth: 92,
+        aiWidth: 92,
+        paddleHeight: 10,
+        ballX: 0,
+        ballY: 0,
+        ballVX: 0,
+        ballVY: 0,
+        ballSize: 8,
+        playerScore: 0,
+        aiScore: 0,
+        leftPressed: false,
+        rightPressed: false
+    };
+
+    function updatePongScore(textOverride = null) {
+        const scoreEl = document.getElementById('pong-score');
+        if (!scoreEl) return;
+        scoreEl.textContent = textOverride || `PLAYER ${pong.playerScore} : ${pong.aiScore} CPU`;
+    }
+
+    function resetPongBall(direction = Math.random() > 0.5 ? 1 : -1) {
+        if (!pong.canvas) return;
+        pong.ballX = (pong.canvas.width - pong.ballSize) / 2;
+        pong.ballY = (pong.canvas.height - pong.ballSize) / 2;
+        pong.ballVX = (Math.random() * 2 - 1) * 1.6;
+        pong.ballVY = direction * 2.8;
+    }
+
+    function initPongGame() {
+        if (pong.canvas) return;
+        const canvas = document.getElementById('pong-canvas');
+        if (!canvas) return;
+
+        pong.canvas = canvas;
+        pong.ctx = canvas.getContext('2d');
+        pong.playerX = (canvas.width - pong.playerWidth) / 2;
+        pong.aiX = (canvas.width - pong.aiWidth) / 2;
+        updatePongScore();
+        resetPongBall();
+
+        const syncPlayerToCursor = (clientX) => {
+            const rect = canvas.getBoundingClientRect();
+            const localX = (clientX - rect.left) * (canvas.width / rect.width);
+            pong.playerX = clamp(localX - pong.playerWidth / 2, 0, canvas.width - pong.playerWidth);
+        };
+
+        canvas.addEventListener('mousemove', (e) => syncPlayerToCursor(e.clientX));
+        canvas.addEventListener('touchmove', (e) => {
+            if (!e.touches.length) return;
+            syncPlayerToCursor(e.touches[0].clientX);
+            e.preventDefault();
+        }, { passive: false });
+
+        document.addEventListener('keydown', (e) => {
+            const pongVisible = document.getElementById('window-pong')?.style.display !== 'none';
+            if (e.key === 'ArrowLeft') {
+                pong.leftPressed = true;
+                if (pongVisible) e.preventDefault();
+            } else if (e.key === 'ArrowRight') {
+                pong.rightPressed = true;
+                if (pongVisible) e.preventDefault();
+            }
+        });
+
+        document.addEventListener('keyup', (e) => {
+            if (e.key === 'ArrowLeft') pong.leftPressed = false;
+            if (e.key === 'ArrowRight') pong.rightPressed = false;
+        });
+    }
+
+    function stopPongGame() {
+        isPongRunning = false;
+        if (pongLoopId) {
+            cancelAnimationFrame(pongLoopId);
+            pongLoopId = null;
+        }
+    }
+
+    function startPongGame() {
+        initPongGame();
+        if (!pong.canvas || !pong.ctx || isPongRunning) return;
+        isPongRunning = true;
+
+        const run = () => {
+            if (!isPongRunning || !pong.canvas || !pong.ctx) return;
+
+            const c = pong.canvas;
+            const ctx = pong.ctx;
+            const topY = 14;
+            const bottomY = c.height - 14 - pong.paddleHeight;
+
+            if (pong.leftPressed) pong.playerX -= 4.2;
+            if (pong.rightPressed) pong.playerX += 4.2;
+            pong.playerX = clamp(pong.playerX, 0, c.width - pong.playerWidth);
+
+            const aiCenter = pong.aiX + pong.aiWidth / 2;
+            const ballCenter = pong.ballX + pong.ballSize / 2;
+            if (aiCenter < ballCenter - 8) pong.aiX += 2.4;
+            else if (aiCenter > ballCenter + 8) pong.aiX -= 2.4;
+            pong.aiX = clamp(pong.aiX, 0, c.width - pong.aiWidth);
+
+            pong.ballX += pong.ballVX;
+            pong.ballY += pong.ballVY;
+
+            if (pong.ballX <= 0 || pong.ballX + pong.ballSize >= c.width) {
+                pong.ballX = clamp(pong.ballX, 0, c.width - pong.ballSize);
+                pong.ballVX *= -1;
+                playTone(720, 'square', 0.03, 0.03);
+            }
+
+            if (
+                pong.ballVY < 0 &&
+                pong.ballY <= topY + pong.paddleHeight &&
+                pong.ballY + pong.ballSize >= topY &&
+                pong.ballX + pong.ballSize >= pong.aiX &&
+                pong.ballX <= pong.aiX + pong.aiWidth
+            ) {
+                pong.ballY = topY + pong.paddleHeight;
+                pong.ballVY = Math.abs(pong.ballVY);
+                const offset = ((pong.ballX + pong.ballSize / 2) - (pong.aiX + pong.aiWidth / 2)) / (pong.aiWidth / 2);
+                pong.ballVX += offset * 0.55;
+                playTone(430, 'triangle', 0.04, 0.03);
+            }
+
+            if (
+                pong.ballVY > 0 &&
+                pong.ballY + pong.ballSize >= bottomY &&
+                pong.ballY <= bottomY + pong.paddleHeight &&
+                pong.ballX + pong.ballSize >= pong.playerX &&
+                pong.ballX <= pong.playerX + pong.playerWidth
+            ) {
+                pong.ballY = bottomY - pong.ballSize;
+                pong.ballVY = -Math.abs(pong.ballVY);
+                const offset = ((pong.ballX + pong.ballSize / 2) - (pong.playerX + pong.playerWidth / 2)) / (pong.playerWidth / 2);
+                pong.ballVX += offset * 0.65;
+                playTone(560, 'square', 0.04, 0.03);
+            }
+
+            if (pong.ballY + pong.ballSize < 0) {
+                pong.playerScore++;
+                updatePongScore();
+                playTone(920, 'sawtooth', 0.08, 0.05);
+                resetPongBall(-1);
+            } else if (pong.ballY > c.height) {
+                pong.aiScore++;
+                updatePongScore();
+                playTone(180, 'sawtooth', 0.08, 0.05);
+                resetPongBall(1);
+            }
+
+            if (Math.abs(pong.ballVX) > 3.8) pong.ballVX = 3.8 * Math.sign(pong.ballVX);
+
+            ctx.fillStyle = '#05060d';
+            ctx.fillRect(0, 0, c.width, c.height);
+
+            ctx.fillStyle = 'rgba(0, 255, 255, 0.35)';
+            for (let y = 0; y < c.height; y += 18) ctx.fillRect(c.width / 2 - 1, y, 2, 10);
+
+            ctx.fillStyle = '#ff4ad8';
+            ctx.fillRect(pong.aiX, topY, pong.aiWidth, pong.paddleHeight);
+
+            ctx.fillStyle = '#00ffff';
+            ctx.fillRect(pong.playerX, bottomY, pong.playerWidth, pong.paddleHeight);
+
+            ctx.fillStyle = '#fff880';
+            ctx.fillRect(pong.ballX, pong.ballY, pong.ballSize, pong.ballSize);
+
+            pongLoopId = requestAnimationFrame(run);
+        };
+
+        run();
     }
 
     // --- PAINT ---

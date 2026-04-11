@@ -57,7 +57,8 @@ body {
 #grid-lines { position: absolute; top: calc(-1 * var(--horizon-thickness)); left: -50%; width: 200%; height: 220%; background-image: linear-gradient(var(--neon-pink) 2px, transparent 2px), linear-gradient(90deg, var(--neon-pink) 2px, transparent 2px); background-size: 50px 20px; transform-origin: top center; transform: rotateX(64deg) translateY(0); animation: gridMove 1s linear infinite; opacity: 0.75; }
 @keyframes gridMove { 0% { transform: rotateX(64deg) translateY(0); } 100% { transform: rotateX(64deg) translateY(20px); } }
 
-#ufo { position: absolute; top: 30px; left: -100px; font-size: 30px; filter: drop-shadow(0 0 10px var(--neon-cyan)); transition: left 5s linear, top 2s ease-in-out; pointer-events: none; z-index: 100; }
+#ufo { position: absolute; top: 30px; left: -140px; font-size: 30px; line-height: 1; padding: 8px 10px; margin: -8px -10px; text-shadow: 0 0 8px var(--neon-cyan), 0 0 16px var(--neon-cyan), 0 0 24px rgba(0, 255, 255, 0.65); transition: left 8s linear, top 4s ease-in-out; pointer-events: none; z-index: 100; }
+#ufo::after { content: ""; position: absolute; left: 50%; bottom: -7px; transform: translateX(-50%); width: 28px; height: 10px; background: radial-gradient(ellipse at center, rgba(0, 255, 255, 0.55) 0%, rgba(0, 255, 255, 0.1) 65%, rgba(0, 255, 255, 0) 100%); }
 #desktop-pet { position: absolute; bottom: var(--ground-height); left: 20px; width: 24px; height: 16px; background: var(--neon-cyan); border-top-left-radius: 12px; border-top-right-radius: 12px; border-bottom: 2px solid #00aaaa; box-shadow: 0 0 10px var(--neon-cyan), inset -4px 0 0 rgba(0,0,0,0.2); z-index: 6; cursor: pointer; animation: slimeSquish 1s infinite alternate; transition: left 3s linear; }
 #desktop-pet::before, #desktop-pet::after { content: ""; position: absolute; top: 6px; width: 4px; height: 4px; background: black; }
 #desktop-pet::before { left: 4px; } #desktop-pet::after { right: 4px; }
@@ -92,6 +93,11 @@ body {
 .avatar-box img { width: 100%; height: 100%; object-fit: cover; }
 .status-text p { margin: 5px 0; font-size: 22px; }
 .contact-window-icon { width: 80px; margin-bottom: 15px; image-rendering: auto; filter: drop-shadow(0 0 6px rgba(0, 0, 0, 0.35)); }
+
+.pong-body { background: #02030a; display: flex; flex-direction: column; align-items: center; gap: 8px; color: var(--neon-cyan); }
+.pong-score { font-size: 24px; text-shadow: 0 0 8px rgba(0, 255, 255, 0.8); letter-spacing: 1px; }
+#pong-canvas { width: 100%; max-width: 560px; height: auto; border: 2px inset var(--win-gray); background: #000; image-rendering: pixelated; cursor: none; }
+.pong-help { font-size: 18px; color: #fff880; text-align: center; }
 
 /* Skills Specific */
 .skill-category { margin-bottom: 15px; }

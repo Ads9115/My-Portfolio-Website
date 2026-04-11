@@ -50,6 +50,9 @@
         <div class="icon" data-target="window-paint" style="top: 320px; left: 120px;">
             <div class="icon-img">🎨</div><span>Paint.exe</span>
         </div>
+        <div class="icon" data-target="window-pong" style="top: 420px; left: 20px;">
+            <div class="icon-img">🕹️</div><span>Pong.exe</span>
+        </div>
 
         <div class="window" id="window-status" style="top: 50px; left: 220px; width: 480px; z-index: 10;">
             <div class="title-bar">
@@ -155,6 +158,18 @@
                 <canvas id="paint-canvas" width="300" height="200" style="background: white; border: 2px inset var(--win-gray); cursor: crosshair; image-rendering: pixelated;"></canvas>
             </div>
         </div>
+
+        <div class="window" id="window-pong" style="display: none; top: 80px; left: 420px; width: 620px; height: 430px; z-index: 19;">
+            <div class="title-bar">
+                <div class="title-bar-text">🕹️ PONG.EXE</div>
+                <div class="title-bar-controls"><button class="min-btn">_</button><button class="close-btn"></button></div>
+            </div>
+            <div class="window-body pong-body">
+                <div id="pong-score" class="pong-score">PLAYER 0 : 0 CPU</div>
+                <canvas id="pong-canvas" width="560" height="320"></canvas>
+                <div class="pong-help">Move mouse in the game window or use ← / → keys</div>
+            </div>
+        </div>
         
         <div id="start-menu" style="display: none;">
             <div class="start-menu-sidebar"><span>Windows 98</span></div>
@@ -162,6 +177,7 @@
                 <div class="start-item interactive-btn" data-target="window-status">👨‍💻 Player Status</div>
                 <div class="start-item interactive-btn" data-target="window-projects">🌍 Quest Log</div>
                 <div class="start-item interactive-btn" data-target="window-cmd">⌨️ Command Prompt</div>
+                <div class="start-item interactive-btn" data-target="window-pong">🕹️ Pong.exe</div>
                 <div class="start-divider"></div>
                 <div class="start-item interactive-btn" onclick="window.location.reload()">⏻ Reboot System</div>
             </div>
