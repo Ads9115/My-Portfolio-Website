@@ -10,16 +10,27 @@
 <body>
 
     <div id="crt-overlay"></div>
-    <div id="boot-screen"><div class="blink">INSERT COIN TO START</div></div>
 
     <div id="desktop">
+        <div id="wallpaper-vignette"></div>
         <div id="sky-container"></div>
+        <div id="aurora-band"></div>
         <div class="shooting-star"></div>
         <div id="synth-sun"></div>
-        <div id="ufo">🛸</div>
+        <div id="arcade-city"></div>
+        <div id="pixel-mountains">
+            <div class="mountain mountain-1"></div>
+            <div class="mountain mountain-2"></div>
+            <div class="mountain mountain-3"></div>
+        </div>
         <div class="cloud cloud-1"></div>
         <div class="cloud cloud-2"></div>
         <div class="cloud cloud-3"></div>
+        <div class="pixel-object pixel-invader" aria-hidden="true"></div>
+        <div class="pixel-object pixel-coin" aria-hidden="true"></div>
+        <div class="pixel-object pixel-racer" aria-hidden="true"></div>
+        <div class="pixel-object pixel-orb" aria-hidden="true"></div>
+        <div id="ufo" aria-hidden="true"></div>
         <div id="ground"><div id="grid-lines"></div></div>
         
         <canvas id="matrix-canvas"></canvas>
@@ -44,13 +55,10 @@
         <div class="icon" data-target="window-cube" style="top: 120px; left: 120px;">
             <div class="icon-img">🧊</div><span>3D.exe</span>
         </div>
-        <div class="icon" data-target="window-bouncer" style="top: 220px; left: 120px;">
-            <div class="icon-img">📺</div><span>DVD.exe</span>
-        </div>
-        <div class="icon" data-target="window-paint" style="top: 320px; left: 120px;">
+        <div class="icon" data-target="window-paint" style="top: 220px; left: 120px;">
             <div class="icon-img">🎨</div><span>Paint.exe</span>
         </div>
-        <div class="icon" data-target="window-pong" style="top: 420px; left: 20px;">
+        <div class="icon" data-target="window-pong" style="top: 320px; left: 120px;">
             <div class="icon-img">🕹️</div><span>Pong.exe</span>
         </div>
 
@@ -65,7 +73,7 @@
 
         <div class="window" id="window-skills" style="top: 80px; left: 700px; width: 350px; display: none; z-index: 11;">
             <div class="title-bar">
-                <div class="title-bar-text">✨ SKILLS DATABANK</div>
+                <div class="title-bar-text">SKILLS.DATABANK</div>
                 <div class="title-bar-controls"><button class="min-btn">_</button><button class="max-btn">□</button><button class="close-btn"></button></div>
             </div>
             <div class="window-body" id="inject-skills">
@@ -74,7 +82,7 @@
 
         <div class="window" id="window-projects" style="top: 150px; left: 250px; width: 450px; display: none; z-index: 12;">
             <div class="title-bar">
-                <div class="title-bar-text">🌍 QUEST LOG (Projects)</div>
+                <div class="title-bar-text">QUEST.LOG (PROJECTS)</div>
                 <div class="title-bar-controls"><button class="min-btn">_</button><button class="max-btn">□</button><button class="close-btn"></button></div>
             </div>
             <div class="window-body project-list" id="inject-projects">
@@ -92,7 +100,7 @@
         </div>
 
         <div class="window" id="window-contact" style="display: none; top: 250px; left: 600px; width: 350px; z-index: 13;">
-            <div class="title-bar"><div class="title-bar-text">🌐 COMM LINK</div><div class="title-bar-controls"><button class="min-btn">_</button><button class="max-btn">□</button><button class="close-btn"></button></div></div>
+            <div class="title-bar"><div class="title-bar-text">COMM.LINK</div><div class="title-bar-controls"><button class="min-btn">_</button><button class="max-btn">□</button><button class="close-btn"></button></div></div>
             <div class="window-body" style="text-align: center;">
                 <p style="font-size: 24px; margin-top: 0;">Connection Established.</p>
                 <img src="contact-icon.svg" alt="Contact mail icon" class="contact-window-icon">
@@ -130,19 +138,9 @@
             </div>
         </div>
 
-        <div class="window" id="window-bouncer" style="display: none; top: 200px; left: 250px; width: 400px; height: 300px; z-index: 15;">
-            <div class="title-bar">
-                <div class="title-bar-text">DVD.EXE</div>
-                <div class="title-bar-controls"><button class="min-btn">_</button><button class="close-btn"></button></div>
-            </div>
-            <div class="window-body" style="background: black; position: relative; overflow: hidden; padding: 0;">
-                <div id="bouncing-logo" style="position: absolute; top: 10px; left: 10px; color: #ff00ff; font-size: 30px; font-weight: bold;">GP-DEV</div>
-            </div>
-        </div>
-
         <div class="window" id="window-paint" style="display: none; top: 180px; left: 350px; width: 340px; z-index: 18;">
             <div class="title-bar">
-                <div class="title-bar-text">🎨 Paint.exe</div>
+                <div class="title-bar-text">PAINT.EXE</div>
                 <div class="title-bar-controls"><button class="min-btn">_</button><button class="close-btn"></button></div>
             </div>
             <div class="window-body" style="display: flex; flex-direction: column; align-items: center; gap: 10px;">
@@ -161,7 +159,7 @@
 
         <div class="window" id="window-pong" style="display: none; top: 80px; left: 420px; width: 620px; height: 430px; z-index: 19;">
             <div class="title-bar">
-                <div class="title-bar-text">🕹️ PONG.EXE</div>
+                <div class="title-bar-text">PONG.EXE</div>
                 <div class="title-bar-controls"><button class="min-btn">_</button><button class="close-btn"></button></div>
             </div>
             <div class="window-body pong-body">

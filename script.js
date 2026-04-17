@@ -25,53 +25,53 @@ const PORTFOLIO_DATA = {
     projects: [
         { 
             title: "Custom 3D Math Library", 
-            icon: "📐",
+            icon: "MTH",
             tech: "C++",
             desc: "Highly optimized vector and matrix operations built entirely from scratch in C++ for custom engine architecture. Avoids external dependencies.", 
             link: "https://github.com/Ads9115/Mathlib" 
         },
         { 
             title: "GL Debug Draw", 
-            icon: "🐛",
+            icon: "DBG",
             tech: "C++, OpenGL",
             desc: "An OpenGL utility library designed for easily drawing debug primitives, bounding boxes, and lines during engine development.", 
             link: "https://github.com/Ads9115/gl-debug-draw" 
         },
         { 
             title: "Grass Rendering Pipeline", 
-            icon: "🌿",
+            icon: "GRS",
             tech: "C++, OpenGL, GLSL",
             desc: "A custom shader-based rendering pipeline in OpenGL focused on efficiently rendering massive amounts of dynamic foliage/grass.", 
             link: "https://github.com/Ads9115/Grass-rendering-OpenGL" 
         },
         { 
             title: "2D Gravity Simulation", 
-            icon: "🌍",
+            icon: "PHY",
             tech: "C++",
             desc: "A physics simulation modeling gravitational interactions in a 2D space, applying fundamental math and physics logic.", 
             link: "https://github.com/Ads9115/2D-Simulation-of-Gravity" 
         },
         { 
             title: "Blinn-Phong Lighting", 
-            icon: "💡",
+            icon: "LIT",
             tech: "C++, OpenGL, GLSL",
             desc: "A low-level implementation of the classic Blinn-Phong reflection model to calculate specular highlights and diffuse lighting.", 
             link: "https://github.com/Ads9115/Blinn-Phong-Lighting-Model" 
         },
         { 
             title: "Manual Matrix Transforms", 
-            icon: "🔄",
+            icon: "MAT",
             tech: "C++, Math",
             desc: "A math-heavy demonstration calculating and applying 3D rotation and projection matrices entirely manually.", 
             link: "https://github.com/Ads9115/Manual-Rotation-Projection-Demo" 
         }
     ],
     socials: [
-        { label: "📧 GMAIL - adarshsen9115@gmail.com", link: "https://mail.google.com/mail/?view=cm&fs=1&to=adarshsen9115@gmail.com" },
-        { label: "🐙 GITHUB", link: "https://github.com/Ads9115" },
-        { label: "💼 LINKEDIN", link: "https://www.linkedin.com/in/adarsh-sen-b5748934a/" },
-        { label: "🐦 TWITTER / X", link: "https://x.com/CrumblingBrud" },
-        { label: "📸 INSTAGRAM", link: "https://www.instagram.com/crumbling_bread/?hl=en" }
+        { label: "MAIL - adarshsen9115@gmail.com", link: "https://mail.google.com/mail/?view=cm&fs=1&to=adarshsen9115@gmail.com" },
+        { label: "GITHUB", link: "https://github.com/Ads9115" },
+        { label: "LINKEDIN", link: "https://www.linkedin.com/in/adarsh-sen-b5748934a/" },
+        { label: "TWITTER / X", link: "https://x.com/CrumblingBrud" },
+        { label: "INSTAGRAM", link: "https://www.instagram.com/crumbling_bread/?hl=en" }
     ]
 };
 
@@ -83,7 +83,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- GLOBAL VARIABLES ---
     let highestZIndex = 20;
     let audioCtx = null;
-    let isBouncing = false;
     let isRendering3D = false;
     let isPongRunning = false;
     let isWindowGravityOn = false;
@@ -436,17 +435,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     injectData(); // Run injection immediately
-
-    // --- BOOT SCREEN ---
-    const bootScreen = document.getElementById('boot-screen');
-    if (bootScreen) {
-        bootScreen.addEventListener('click', (e) => {
-            initAudio(); sfx.open();
-            e.currentTarget.style.pointerEvents = 'none'; 
-            e.currentTarget.style.opacity = '0';
-            setTimeout(() => { e.currentTarget.style.display = 'none'; }, 500);
-        });
-    }
+    document.addEventListener('pointerdown', initAudio, { once: true });
 
     document.addEventListener('mousedown', (e) => {
         if (e.target.closest('button, a, .interactive-btn, .icon, .color-swatch')) sfx.click();
@@ -455,11 +444,14 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- STARS ---
     const sky = document.getElementById('sky-container');
     if (sky) {
-        for (let i = 0; i < 60; i++) {
+        for (let i = 0; i < 95; i++) {
             const star = document.createElement('div');
+            const starSize = Math.random() > 0.68 ? 4 : 3;
             star.className = 'star';
             star.style.left = Math.random() * 100 + 'vw';
-            star.style.top  = Math.random() * 60 + 'vh';
+            star.style.top  = Math.random() * 68 + 'vh';
+            star.style.width = starSize + 'px';
+            star.style.height = starSize + 'px';
             star.style.animationDuration = (Math.random() * 2 + 1) + 's';
             star.style.animationDelay    = (Math.random() * 2) + 's';
             sky.appendChild(star);
@@ -469,15 +461,28 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- DESKTOP PET & UFO ---
     const pet = document.getElementById('desktop-pet');
     if (pet) {
+        let petBoopTimeout = null;
+
+        const boopPet = (e) => {
+            e.stopPropagation();
+            if (e.cancelable) e.preventDefault();
+            initAudio();
+            playTone(300, 'sine', 0.1, 0.1);
+            pet.classList.remove('pet-booped');
+            void pet.offsetWidth;
+            pet.classList.add('pet-booped');
+            if (petBoopTimeout) clearTimeout(petBoopTimeout);
+            petBoopTimeout = setTimeout(() => pet.classList.remove('pet-booped'), 240);
+        };
+
         setInterval(() => { 
             const newX = Math.random() * (window.innerWidth - 100);
-            pet.style.transform = (newX < parseInt(pet.style.left || 0)) ? "scaleX(-1)" : "scaleX(1)";
+            const currentX = Number.isFinite(parseFloat(pet.style.left)) ? parseFloat(pet.style.left) : pet.offsetLeft;
+            pet.style.setProperty('--pet-face', newX < currentX ? '-1' : '1');
             pet.style.left = newX + 'px'; 
         }, 4000);
-        pet.addEventListener('mousedown', (e) => {
-            e.stopPropagation(); playTone(300, 'sine', 0.1, 0.1);
-            pet.style.height = '8px'; setTimeout(() => { pet.style.height = '16px'; }, 150);
-        });
+        pet.addEventListener('pointerdown', boopPet);
+        pet.addEventListener('click', boopPet);
     }
 
     const ufo = document.getElementById('ufo');
@@ -596,7 +601,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (closeBtn) closeBtn.addEventListener('click', (e) => {
             e.stopPropagation(); win.style.display = 'none';
-            if (win.id === 'window-bouncer') isBouncing = false;
             if (win.id === 'window-cube')    isRendering3D = false;
             if (win.id === 'window-pong')    stopPongGame();
             windowBodies.delete(win);
@@ -641,7 +645,6 @@ document.addEventListener('DOMContentLoaded', () => {
             body.vx = 0;
             body.vy = Math.max(body.vy, 1.2);
         }
-        if (win.id === 'window-bouncer' && !isBouncing)    { isBouncing    = true; animateLogo(); }
         if (win.id === 'window-cube'    && !isRendering3D) { isRendering3D = true; renderCube();  }
         if (win.id === 'window-pong'    && !isPongRunning) { startPongGame(); }
         if (win.id === 'window-cmd') { const i = document.getElementById('cmd-input'); if (i) i.focus(); }
@@ -815,25 +818,6 @@ document.addEventListener('DOMContentLoaded', () => {
             rCtx.fillStyle = '#ff00ff';
             p.forEach(pt => { rCtx.beginPath(); rCtx.arc(pt.x, pt.y, 4, 0, Math.PI*2); rCtx.fill(); });
             requestAnimationFrame(frame);
-        })();
-    }
-
-    // --- BOUNCING LOGO ---
-    function animateLogo() {
-        const logo = document.getElementById('bouncing-logo');
-        const bwin = document.getElementById('window-bouncer');
-        if (!logo || !bwin) return;
-        const body = bwin.querySelector('.window-body');
-        const colors = ['#ff0000','#00ff00','#0000ff','#ffff00','#ff00ff','#00ffff'];
-        let lx = 10, ly = 10, ldx = 2, ldy = 2, ci = 0;
-        (function bounce() {
-            if (!isBouncing) return;
-            const r1 = body.getBoundingClientRect(), r2 = logo.getBoundingClientRect();
-            if (lx + r2.width >= r1.width  || lx <= 0) { ldx = -ldx; logo.style.color = colors[ci = (ci+1)%colors.length]; playTone(400,'triangle',0.05,0.02); }
-            if (ly + r2.height >= r1.height || ly <= 0) { ldy = -ldy; logo.style.color = colors[ci = (ci+1)%colors.length]; playTone(400,'triangle',0.05,0.02); }
-            lx += ldx; ly += ldy;
-            logo.style.left = lx + 'px'; logo.style.top = ly + 'px';
-            requestAnimationFrame(bounce);
         })();
     }
 
