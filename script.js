@@ -19,10 +19,18 @@ const PORTFOLIO_DATA = {
         },
         {
             category: "Creative Tools",
-            items: ["Photoshop", "Illustrator", "After Effects", "Figma"]
+            items: ["Photoshop", "Illustrator (Beginner to Intermediate)", "After Effects (Beginner to Intermediate)", "Adobe Premiere Pro", "Figma"]
         }
     ],
     projects: [
+        { 
+            title: "Creative Project Gallery", 
+            icon: "ART",
+            tech: "After Effects, Illustrator, Adobe Premiere Pro",
+            desc: "A curated Instagram feed of motion graphics, posters, and edits from my creative work.", 
+            link: "https://www.instagram.com/crumbling_bread/?hl=en",
+            linkLabel: "View Instagram"
+        },
         { 
             title: "Custom 3D Math Library", 
             icon: "MTH",
@@ -57,13 +65,6 @@ const PORTFOLIO_DATA = {
             tech: "C++, OpenGL, GLSL",
             desc: "A low-level implementation of the classic Blinn-Phong reflection model to calculate specular highlights and diffuse lighting.", 
             link: "https://github.com/Ads9115/Blinn-Phong-Lighting-Model" 
-        },
-        { 
-            title: "Manual Matrix Transforms", 
-            icon: "MAT",
-            tech: "C++, Math",
-            desc: "A math-heavy demonstration calculating and applying 3D rotation and projection matrices entirely manually.", 
-            link: "https://github.com/Ads9115/Manual-Rotation-Projection-Demo" 
         }
     ],
     socials: [
@@ -413,7 +414,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 document.getElementById('detail-title').innerText = data.title;
                 document.getElementById('detail-tech').innerText  = data.tech || "Various";
                 document.getElementById('detail-desc').innerHTML  = data.desc;
-                document.getElementById('detail-link').href       = data.link;
+                const detailLink = document.getElementById('detail-link');
+                detailLink.href = data.link;
+                detailLink.innerText = data.linkLabel || "Open GitHub Repo";
                 
                 // Show the window
                 const win = document.getElementById('window-project-details');
