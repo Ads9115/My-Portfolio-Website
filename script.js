@@ -93,6 +93,10 @@ document.addEventListener('DOMContentLoaded', () => {
     let matrixResizeHandler = null;
     let pongLoopId = null;
     let gravityLoopId = null;
+    const ENABLE_AUDIO_FEEDBACK = true;
+    const ENABLE_CURSOR_SPARKLES = false;
+    const ENABLE_DESKTOP_SPARKS = false;
+    const STAR_COUNT = 55;
     const windowBodies = new Map();
     const iconBodies = new Map();
     const initialIconPositions = new Map();
@@ -108,6 +112,23 @@ document.addEventListener('DOMContentLoaded', () => {
     const TASKBAR_HEIGHT = 40;
     const ufoMinTop = 36;
     const ufoMaxTop = 220;
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const windows = Array.from(document.querySelectorAll('.window'));
+    const icons = Array.from(document.querySelectorAll('.icon'));
+    const startItems = Array.from(document.querySelectorAll('.start-item[data-target]'));
+    const desktopEl = document.getElementById('desktop');
+    const sky = document.getElementById('sky-container');
+    const startBtn = document.getElementById('start-btn');
+    const startMenu = document.getElementById('start-menu');
+    const injectStatus = document.getElementById('inject-status');
+    const injectSkills = document.getElementById('inject-skills');
+    const injectProjects = document.getElementById('inject-projects');
+    const injectContact = document.getElementById('inject-contact');
+    const detailTitle = document.getElementById('detail-title');
+    const detailTech = document.getElementById('detail-tech');
+    const detailDesc = document.getElementById('detail-desc');
+    const detailLink = document.getElementById('detail-link');
+    const detailWindow = document.getElementById('window-project-details');
     let sparks = [];
 
     // --- SINGLE GLOBAL DRAG STATE ---
@@ -121,10 +142,19 @@ document.addEventListener('DOMContentLoaded', () => {
         el.style.zIndex = highestZIndex;
     }
 
+    function getStyledPosition(el) {
+        const left = parseFloat(el.style.left);
+        const top = parseFloat(el.style.top);
+        return {
+            left: Number.isFinite(left) ? left : el.offsetLeft,
+            top: Number.isFinite(top) ? top : el.offsetTop
+        };
+    }
+
     function getWindowBody(win) {
         let body = windowBodies.get(win);
         if (!body) {
-            body = { x: win.offsetLeft, y: win.offsetTop, vx: 0, vy: 0 };
+            body = { x: win.offsetLeft, y: win.offsetTop, w: win.offsetWidth, h: win.offsetHeight, vx: 0, vy: 0 };
             windowBodies.set(win, body);
         }
         return body;
@@ -134,13 +164,15 @@ document.addEventListener('DOMContentLoaded', () => {
         const body = getWindowBody(win);
         body.x = win.offsetLeft;
         body.y = win.offsetTop;
+        body.w = win.offsetWidth;
+        body.h = win.offsetHeight;
         return body;
     }
 
     function getIconBody(icon) {
         let body = iconBodies.get(icon);
         if (!body) {
-            body = { x: icon.offsetLeft, y: icon.offsetTop, vx: 0, vy: 0 };
+            body = { x: icon.offsetLeft, y: icon.offsetTop, w: icon.offsetWidth, h: icon.offsetHeight, vx: 0, vy: 0 };
             iconBodies.set(icon, body);
         }
         return body;
@@ -150,30 +182,30 @@ document.addEventListener('DOMContentLoaded', () => {
         const body = getIconBody(icon);
         body.x = icon.offsetLeft;
         body.y = icon.offsetTop;
+        body.w = icon.offsetWidth;
+        body.h = icon.offsetHeight;
         return body;
     }
 
     function captureInitialIconPositions() {
-        document.querySelectorAll('.icon').forEach(icon => {
+        icons.forEach(icon => {
             if (initialIconPositions.has(icon)) return;
-            const left = Number.isFinite(parseFloat(icon.style.left)) ? parseFloat(icon.style.left) : icon.offsetLeft;
-            const top = Number.isFinite(parseFloat(icon.style.top)) ? parseFloat(icon.style.top) : icon.offsetTop;
+            const { left, top } = getStyledPosition(icon);
             initialIconPositions.set(icon, { left, top });
         });
     }
 
     function snapshotIconReturnPositions() {
         iconReturnPositions.clear();
-        document.querySelectorAll('.icon').forEach(icon => {
-            const left = Number.isFinite(parseFloat(icon.style.left)) ? parseFloat(icon.style.left) : icon.offsetLeft;
-            const top = Number.isFinite(parseFloat(icon.style.top)) ? parseFloat(icon.style.top) : icon.offsetTop;
+        icons.forEach(icon => {
+            const { left, top } = getStyledPosition(icon);
             iconReturnPositions.set(icon, { left, top });
         });
     }
 
     function restoreIconsToSavedPositions() {
         const mapToUse = iconReturnPositions.size ? iconReturnPositions : initialIconPositions;
-        document.querySelectorAll('.icon').forEach(icon => {
+        icons.forEach(icon => {
             const pos = mapToUse.get(icon);
             if (!pos) return;
             icon.style.left = `${pos.left}px`;
@@ -186,14 +218,14 @@ document.addEventListener('DOMContentLoaded', () => {
         if (isWindowGravityOn) return;
         isWindowGravityOn = true;
         snapshotIconReturnPositions();
-        document.querySelectorAll('.window').forEach(win => {
+        windows.forEach(win => {
             if (win.style.display !== 'none' && !win.classList.contains('maximized')) {
                 const body = syncBodyFromElement(win);
                 body.vx = 0;
                 body.vy = 0;
             }
         });
-        document.querySelectorAll('.icon').forEach(icon => {
+        icons.forEach(icon => {
             const body = syncIconBodyFromElement(icon);
             body.vx = 0;
             body.vy = 0;
@@ -216,7 +248,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const floorY = window.innerHeight - TASKBAR_HEIGHT;
         const maxX = window.innerWidth;
 
-        document.querySelectorAll('.window').forEach(win => {
+        windows.forEach(win => {
             if (win.style.display === 'none' || win.classList.contains('maximized')) {
                 windowBodies.delete(win);
                 return;
@@ -235,8 +267,8 @@ document.addEventListener('DOMContentLoaded', () => {
             body.x += body.vx;
             body.y += body.vy;
 
-            const w = win.offsetWidth;
-            const h = win.offsetHeight;
+            const w = body.w;
+            const h = body.h;
 
             if (body.x < 0) {
                 body.x = 0;
@@ -267,7 +299,7 @@ document.addEventListener('DOMContentLoaded', () => {
             win.style.top = `${body.y}px`;
         });
 
-        document.querySelectorAll('.icon').forEach(icon => {
+        icons.forEach(icon => {
             const body = getIconBody(icon);
 
             if (dragEl === icon) {
@@ -282,8 +314,8 @@ document.addEventListener('DOMContentLoaded', () => {
             body.x += body.vx;
             body.y += body.vy;
 
-            const w = icon.offsetWidth;
-            const h = icon.offsetHeight;
+            const w = body.w;
+            const h = body.h;
 
             if (body.x < 0) {
                 body.x = 0;
@@ -331,6 +363,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- AUDIO SYNTHESIZER ---
     function initAudio() {
+        if (!ENABLE_AUDIO_FEEDBACK) return;
         try {
             if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
             if (audioCtx.state === 'suspended') audioCtx.resume();
@@ -338,6 +371,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function playTone(freq, type, duration, vol = 0.1) {
+        if (!ENABLE_AUDIO_FEEDBACK) return;
         try {
             if (!audioCtx) return;
             const osc = audioCtx.createOscillator();
@@ -357,6 +391,34 @@ document.addEventListener('DOMContentLoaded', () => {
         minimize: () => { playTone(800, 'square', 0.1, 0.05); setTimeout(() => playTone(400, 'square', 0.15, 0.05), 100); },
     };
 
+    function queueEffect(effect) {
+        if (!ENABLE_AUDIO_FEEDBACK) return;
+        requestAnimationFrame(() => {
+            initAudio();
+            effect();
+        });
+    }
+
+    function bindFastActivation(element, handler) {
+        if (!element) return;
+        let handledPointer = false;
+
+        element.addEventListener('pointerup', (e) => {
+            if (e.pointerType === 'mouse' && e.button !== 0) return;
+            handledPointer = true;
+            handler(e);
+            setTimeout(() => { handledPointer = false; }, 500);
+        });
+
+        element.addEventListener('click', (e) => {
+            if (handledPointer) {
+                e.preventDefault();
+                return;
+            }
+            handler(e);
+        });
+    }
+
     // --- INJECT DYNAMIC DATA & BIND PROJECT CLICKS ---
     function injectData() {
         // Status/Bio
@@ -372,23 +434,19 @@ document.addEventListener('DOMContentLoaded', () => {
             <hr>
             <p style="font-size: 20px; line-height: 1.4;">${PORTFOLIO_DATA.profile.bio}</p>
         `;
-        const injectStatus = document.getElementById('inject-status');
         if(injectStatus) injectStatus.innerHTML = statusHtml;
 
         // Skills
-        let skillsHtml = "";
-        PORTFOLIO_DATA.skills.forEach(category => {
-            skillsHtml += `<div class="skill-category"><strong>${category.category}</strong><ul class="skill-list">`;
-            category.items.forEach(item => { skillsHtml += `<li>${item}</li>`; });
-            skillsHtml += `</ul></div>`;
-        });
-        const injectSkills = document.getElementById('inject-skills');
+        const skillsHtml = PORTFOLIO_DATA.skills.map(category => `
+            <div class="skill-category">
+                <strong>${category.category}</strong>
+                <ul class="skill-list">${category.items.map(item => `<li>${item}</li>`).join('')}</ul>
+            </div>
+        `).join('');
         if(injectSkills) injectSkills.innerHTML = skillsHtml;
 
         // Projects
-        let projHtml = "";
-        PORTFOLIO_DATA.projects.forEach((proj, index) => {
-            projHtml += `
+        const projHtml = PORTFOLIO_DATA.projects.map((proj, index) => `
                 <div class="project-item interactive" data-index="${index}">
                     <div class="proj-icon">${proj.icon}</div>
                     <div class="proj-details">
@@ -396,69 +454,62 @@ document.addEventListener('DOMContentLoaded', () => {
                         <p>${proj.desc.substring(0, 60)}...</p>
                     </div>
                 </div>
-            `;
-        });
-        const injectProjects = document.getElementById('inject-projects');
+            `).join('');
         if(injectProjects) injectProjects.innerHTML = projHtml;
 
         // --- BIND CLICKS FOR DYNAMIC PROJECTS ---
         // This makes sure clicking a project opens the details window!
-        document.querySelectorAll('.project-item.interactive').forEach(item => {
-            item.addEventListener('click', () => {
-                sfx.click(); // Play sound
+        injectProjects?.querySelectorAll('.project-item.interactive').forEach(item => {
+            bindFastActivation(item, () => {
                 const index = item.getAttribute('data-index');
                 const data = PORTFOLIO_DATA.projects[index];
                 if (!data) return;
                 
                 // Populate the detail window
-                document.getElementById('detail-title').innerText = data.title;
-                document.getElementById('detail-tech').innerText  = data.tech || "Various";
-                document.getElementById('detail-desc').innerHTML  = data.desc;
-                const detailLink = document.getElementById('detail-link');
-                detailLink.href = data.link;
-                detailLink.innerText = data.linkLabel || "Open GitHub Repo";
+                if (detailTitle) detailTitle.innerText = data.title;
+                if (detailTech) detailTech.innerText  = data.tech || "Various";
+                if (detailDesc) detailDesc.innerHTML  = data.desc;
+                if (detailLink) {
+                    detailLink.href = data.link;
+                    detailLink.innerText = data.linkLabel || "Open GitHub Repo";
+                }
                 
                 // Show the window
-                const win = document.getElementById('window-project-details');
-                if (win) { 
-                    win.style.display = 'flex'; 
-                    bringToFront(win); 
-                    sfx.open();
+                if (detailWindow) { 
+                    detailWindow.style.display = 'flex'; 
+                    bringToFront(detailWindow); 
+                    queueEffect(sfx.open);
                 }
             });
         });
 
         // Social Links
-        let contactHtml = "";
-        PORTFOLIO_DATA.socials.forEach(social => {
-            contactHtml += `<a href="${social.link}" target="_blank" rel="noopener noreferrer" class="win-btn">${social.label}</a>`;
-        });
-        const injectContact = document.getElementById('inject-contact');
+        const contactHtml = PORTFOLIO_DATA.socials.map(social => (
+            `<a href="${social.link}" target="_blank" rel="noopener noreferrer" class="win-btn">${social.label}</a>`
+        )).join('');
         if(injectContact) injectContact.innerHTML = contactHtml;
     }
     
     injectData(); // Run injection immediately
-    document.addEventListener('pointerdown', initAudio, { once: true });
-
-    document.addEventListener('mousedown', (e) => {
-        if (e.target.closest('button, a, .interactive-btn, .icon, .color-swatch')) sfx.click();
-    });
+    if (ENABLE_AUDIO_FEEDBACK) {
+        document.addEventListener('pointerdown', initAudio, { once: true });
+        document.addEventListener('mousedown', (e) => {
+            if (e.target.closest('button, a, .interactive-btn, .icon, .color-swatch')) queueEffect(sfx.click);
+        });
+    }
 
     // --- STARS ---
-    const sky = document.getElementById('sky-container');
     if (sky) {
-        for (let i = 0; i < 95; i++) {
+        const starFragment = document.createDocumentFragment();
+        const starTotal = prefersReducedMotion ? Math.min(16, STAR_COUNT) : STAR_COUNT;
+        for (let i = 0; i < starTotal; i++) {
             const star = document.createElement('div');
             const starSize = Math.random() > 0.68 ? 4 : 3;
             star.className = 'star';
-            star.style.left = Math.random() * 100 + 'vw';
-            star.style.top  = Math.random() * 68 + 'vh';
-            star.style.width = starSize + 'px';
-            star.style.height = starSize + 'px';
-            star.style.animationDuration = (Math.random() * 2 + 1) + 's';
-            star.style.animationDelay    = (Math.random() * 2) + 's';
-            sky.appendChild(star);
+            star.style.cssText = `left:${Math.random() * 100}vw;top:${Math.random() * 68}vh;width:${starSize}px;height:${starSize}px;animation-duration:${Math.random() * 2 + 1}s;animation-delay:${Math.random() * 2}s;`;
+            starFragment.appendChild(star);
         }
+        sky.appendChild(starFragment);
     }
 
     // --- DESKTOP PET & UFO ---
@@ -478,14 +529,15 @@ document.addEventListener('DOMContentLoaded', () => {
             petBoopTimeout = setTimeout(() => pet.classList.remove('pet-booped'), 240);
         };
 
-        setInterval(() => { 
-            const newX = Math.random() * (window.innerWidth - 100);
-            const currentX = Number.isFinite(parseFloat(pet.style.left)) ? parseFloat(pet.style.left) : pet.offsetLeft;
-            pet.style.setProperty('--pet-face', newX < currentX ? '-1' : '1');
-            pet.style.left = newX + 'px'; 
-        }, 4000);
-        pet.addEventListener('pointerdown', boopPet);
-        pet.addEventListener('click', boopPet);
+        if (!prefersReducedMotion) {
+            setInterval(() => { 
+                const newX = Math.random() * (window.innerWidth - 100);
+                const currentX = getStyledPosition(pet).left;
+                pet.style.setProperty('--pet-face', newX < currentX ? '-1' : '1');
+                pet.style.left = `${newX}px`; 
+            }, 4000);
+        }
+        bindFastActivation(pet, boopPet);
     }
 
     const ufo = document.getElementById('ufo');
@@ -505,22 +557,24 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- MOUSE SPARKLES ---
-    let lastSparkTime = 0;
-    document.addEventListener('mousemove', (e) => {
-        if (Date.now() - lastSparkTime > 30) {
-            const sp = document.createElement('div');
-            sp.className = 'mouse-sparkle';
-            sp.style.left = e.clientX + 'px';
-            sp.style.top  = e.clientY + 'px';
-            sp.style.background = Math.random() > 0.5 ? '#ff00ff' : '#00ffff';
-            document.body.appendChild(sp);
-            setTimeout(() => sp.remove(), 500);
-            lastSparkTime = Date.now();
-        }
-    });
+    if (ENABLE_CURSOR_SPARKLES) {
+        let lastSparkTime = 0;
+        document.addEventListener('mousemove', (e) => {
+            if (Date.now() - lastSparkTime > 30) {
+                const sp = document.createElement('div');
+                sp.className = 'mouse-sparkle';
+                sp.style.left = e.clientX + 'px';
+                sp.style.top  = e.clientY + 'px';
+                sp.style.background = Math.random() > 0.5 ? '#ff00ff' : '#00ffff';
+                document.body.appendChild(sp);
+                setTimeout(() => sp.remove(), 500);
+                lastSparkTime = Date.now();
+            }
+        });
+    }
 
     // --- PHYSICS SPARKS (clicking bare desktop) ---
-    const desktop = document.getElementById('desktop');
+    const desktop = ENABLE_DESKTOP_SPARKS ? desktopEl : null;
     if (desktop) {
         desktop.addEventListener('mousedown', (e) => {
             const id = e.target.id;
@@ -594,7 +648,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    document.querySelectorAll('.window').forEach(win => {
+    windows.forEach(win => {
         makeDraggable(win, win.querySelector('.title-bar'));
 
         const closeBtn = win.querySelector('.close-btn');
@@ -602,20 +656,20 @@ document.addEventListener('DOMContentLoaded', () => {
         const maxBtn   = win.querySelector('.max-btn');
         let preMax = {};
 
-        if (closeBtn) closeBtn.addEventListener('click', (e) => {
+        if (closeBtn) bindFastActivation(closeBtn, (e) => {
             e.stopPropagation(); win.style.display = 'none';
             if (win.id === 'window-cube')    isRendering3D = false;
             if (win.id === 'window-pong')    stopPongGame();
             windowBodies.delete(win);
         });
 
-        if (minBtn) minBtn.addEventListener('click', (e) => {
-            e.stopPropagation(); sfx.minimize(); win.style.display = 'none';
+        if (minBtn) bindFastActivation(minBtn, (e) => {
+            e.stopPropagation(); win.style.display = 'none'; queueEffect(sfx.minimize);
             if (win.id === 'window-pong') stopPongGame();
             windowBodies.delete(win);
         });
 
-        if (maxBtn) maxBtn.addEventListener('click', (e) => {
+        if (maxBtn) bindFastActivation(maxBtn, (e) => {
             e.stopPropagation();
             if (!win.classList.contains('maximized')) {
                 preMax = { top: win.style.top, left: win.style.left, width: win.style.width, height: win.style.height };
@@ -642,7 +696,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function openWindow(targetId) {
         const win = document.getElementById(targetId);
         if (!win) return;
-        win.style.display = 'flex'; bringToFront(win); sfx.open();
+        win.style.display = 'flex'; bringToFront(win); queueEffect(sfx.open);
         if (isWindowGravityOn && !win.classList.contains('maximized')) {
             const body = syncBodyFromElement(win);
             body.vx = 0;
@@ -653,7 +707,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (win.id === 'window-cmd') { const i = document.getElementById('cmd-input'); if (i) i.focus(); }
     }
 
-    document.querySelectorAll('.icon').forEach(icon => {
+    icons.forEach(icon => {
         icon.addEventListener('mousedown', (e) => {
             dragMoved  = false; dragEl = icon;
             dragStartX = e.clientX; dragStartY = e.clientY;
@@ -661,7 +715,7 @@ document.addEventListener('DOMContentLoaded', () => {
             bringToFront(icon);
         });
 
-        icon.addEventListener('click', () => {
+        bindFastActivation(icon, () => {
             if (dragMoved) return; // was dragged, not clicked
             openWindow(icon.getAttribute('data-target'));
         });
@@ -669,10 +723,8 @@ document.addEventListener('DOMContentLoaded', () => {
     captureInitialIconPositions();
 
     // --- START MENU ---
-    const startBtn  = document.getElementById('start-btn');
-    const startMenu = document.getElementById('start-menu');
     if (startBtn && startMenu) {
-        startBtn.addEventListener('click', (e) => {
+        bindFastActivation(startBtn, (e) => {
             e.stopPropagation();
             const visible = startMenu.style.display !== 'none';
             startMenu.style.display = visible ? 'none' : 'flex';
@@ -685,8 +737,8 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    document.querySelectorAll('.start-item[data-target]').forEach(item => {
-        item.addEventListener('click', () => {
+    startItems.forEach(item => {
+        bindFastActivation(item, () => {
             openWindow(item.getAttribute('data-target'));
             if (startMenu) startMenu.style.display = 'none';
             if (startBtn)  startBtn.classList.remove('active');
@@ -746,7 +798,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 printCmd('Hardware failure simulated.', '#ffff00');
             } else if (val === 'blackhole') {
                 printCmd('WARNING: GRAVITY ANOMALY DETECTED.', '#ff0000');
-                document.querySelectorAll('.icon, .window').forEach(el => {
+                [...icons, ...windows].forEach(el => {
                     el.style.transition = 'all 3s cubic-bezier(0.5,0,0.5,1)';
                     el.style.transform  = 'rotate(720deg) scale(0)';
                     el.style.top = '50%'; el.style.left = '50%';
@@ -759,7 +811,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 else {
                     printCmd('Matrix override terminated.', '#ff0000');
                     mc.style.display = 'none';
-                    clearInterval(matrixInterval);
+                    cancelAnimationFrame(matrixInterval);
+                    matrixInterval = null;
                     if (matrixResizeHandler) {
                         window.removeEventListener('resize', matrixResizeHandler);
                         matrixResizeHandler = null;
@@ -779,22 +832,29 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (matrixResizeHandler) window.removeEventListener('resize', matrixResizeHandler);
         matrixResizeHandler = () => {
-            const desktopArea = document.getElementById('desktop');
-            canvas.width = desktopArea ? desktopArea.clientWidth : window.innerWidth;
-            canvas.height = desktopArea ? desktopArea.clientHeight : (window.innerHeight - 40);
+            canvas.width = desktopEl ? desktopEl.clientWidth : window.innerWidth;
+            canvas.height = desktopEl ? desktopEl.clientHeight : (window.innerHeight - 40);
             drops = Array.from({ length: Math.floor(canvas.width / fs) }, () => 1);
         };
         matrixResizeHandler();
         window.addEventListener('resize', matrixResizeHandler);
-        matrixInterval = setInterval(() => {
-            ctx.fillStyle = 'rgba(0,0,0,0.05)'; ctx.fillRect(0, 0, canvas.width, canvas.height);
-            ctx.fillStyle = '#0F0'; ctx.font = fs + 'px monospace';
-            drops.forEach((d, i) => {
-                ctx.fillText(letters[Math.floor(Math.random() * letters.length)], i * fs, d * fs);
-                if (d * fs > canvas.height && Math.random() > 0.975) drops[i] = 0;
-                drops[i]++;
-            });
-        }, 33);
+
+        let lastDraw = 0;
+        const drawMatrix = (time) => {
+            if (!isMatrixRunning) return;
+            if (time - lastDraw >= 33) {
+                ctx.fillStyle = 'rgba(0,0,0,0.05)'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+                ctx.fillStyle = '#0F0'; ctx.font = fs + 'px monospace';
+                drops.forEach((d, i) => {
+                    ctx.fillText(letters[Math.floor(Math.random() * letters.length)], i * fs, d * fs);
+                    if (d * fs > canvas.height && Math.random() > 0.975) drops[i] = 0;
+                    drops[i]++;
+                });
+                lastDraw = time;
+            }
+            matrixInterval = requestAnimationFrame(drawMatrix);
+        };
+        matrixInterval = requestAnimationFrame(drawMatrix);
     }
 
     // --- 3D CUBE ---
@@ -874,12 +934,18 @@ document.addEventListener('DOMContentLoaded', () => {
         updatePongScore();
         resetPongBall();
 
+        let canvasRect = canvas.getBoundingClientRect();
+        const refreshCanvasRect = () => {
+            canvasRect = canvas.getBoundingClientRect();
+        };
+
         const syncPlayerToCursor = (clientX) => {
-            const rect = canvas.getBoundingClientRect();
-            const localX = (clientX - rect.left) * (canvas.width / rect.width);
+            const localX = (clientX - canvasRect.left) * (canvas.width / canvasRect.width);
             pong.playerX = clamp(localX - pong.playerWidth / 2, 0, canvas.width - pong.playerWidth);
         };
 
+        canvas.addEventListener('mouseenter', refreshCanvasRect);
+        window.addEventListener('resize', refreshCanvasRect);
         canvas.addEventListener('mousemove', (e) => syncPlayerToCursor(e.clientX));
         canvas.addEventListener('touchmove', (e) => {
             if (!e.touches.length) return;
@@ -1012,10 +1078,15 @@ document.addEventListener('DOMContentLoaded', () => {
     if (pCanvas) {
         const pCtx = pCanvas.getContext('2d');
         let isDrawing = false, brushColor = '#000000';
+        let paintCanvasRect = pCanvas.getBoundingClientRect();
+        const refreshPaintCanvasRect = () => {
+            paintCanvasRect = pCanvas.getBoundingClientRect();
+        };
         pCtx.fillStyle = '#ffffff'; pCtx.fillRect(0, 0, pCanvas.width, pCanvas.height);
-        document.querySelectorAll('.color-swatch').forEach(sw => {
+        const colorSwatches = Array.from(document.querySelectorAll('.color-swatch'));
+        colorSwatches.forEach(sw => {
             sw.addEventListener('click', () => {
-                document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('active'));
+                colorSwatches.forEach(s => s.classList.remove('active'));
                 sw.classList.add('active');
                 brushColor = sw.getAttribute('data-color');
             });
@@ -1027,11 +1098,12 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         const draw = (e) => {
             if (!isDrawing) return;
-            const r = pCanvas.getBoundingClientRect();
             pCtx.fillStyle = brushColor;
-            pCtx.fillRect(Math.floor((e.clientX-r.left)/5)*5, Math.floor((e.clientY-r.top)/5)*5, 5, 5);
+            pCtx.fillRect(Math.floor((e.clientX - paintCanvasRect.left) / 5) * 5, Math.floor((e.clientY - paintCanvasRect.top) / 5) * 5, 5, 5);
         };
-        pCanvas.addEventListener('mousedown', (e) => { isDrawing = true; draw(e); });
+        pCanvas.addEventListener('mouseenter', refreshPaintCanvasRect);
+        window.addEventListener('resize', refreshPaintCanvasRect);
+        pCanvas.addEventListener('mousedown', (e) => { refreshPaintCanvasRect(); isDrawing = true; draw(e); });
         pCanvas.addEventListener('mousemove', draw);
         pCanvas.addEventListener('mouseup',  () => isDrawing = false);
         pCanvas.addEventListener('mouseout', () => isDrawing = false);
