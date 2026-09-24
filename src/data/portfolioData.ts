@@ -86,5 +86,4 @@ export const DESKTOP_ICONS: DesktopIconConfig[] = [
   { id: 'icon-cube', label: '3D.exe', iconEmoji: '🧊', targetWindowId: 'window-cube', defaultPos: { top: 120, left: 120 } },
   { id: 'icon-paint', label: 'Paint.exe', iconEmoji: '🎨', targetWindowId: 'window-paint', defaultPos: { top: 220, left: 120 } },
   { id: 'icon-pong', label: 'Pong.exe', iconEmoji: '🕹️', targetWindowId: 'window-pong', defaultPos: { top: 320, left: 120 } },
-  { id: 'icon-project-manager', label: 'Project Mgr', iconEmoji: '🛠️', targetWindowId: 'window-project-manager', defaultPos: { top: 420, left: 20 } },
 ];
