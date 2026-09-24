@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { WindowState } from '../types/os';
 import { PORTFOLIO_DATA, DESKTOP_ICONS } from '../data/portfolioData';
+import { projectService, ProjectItem } from '../services/projectService';
 
 const INITIAL_ICON_POSITIONS = DESKTOP_ICONS.reduce((acc, icon) => {
   acc[icon.id] = { x: icon.defaultPos.left, y: icon.defaultPos.top };
@@ -106,6 +107,17 @@ const INITIAL_WINDOWS: Record<string, WindowState> = {
     position: { x: 420, y: 80 },
     size: { width: 620, height: 430 },
     zIndex: 19
+  },
+  'window-project-manager': {
+    id: 'window-project-manager',
+    title: 'PROJECT_MGR.EXE',
+    icon: '🛠️',
+    isOpen: false,
+    isMinimized: false,
+    isMaximized: false,
+    position: { x: 260, y: 70 },
+    size: { width: 560, height: 500 },
+    zIndex: 20
   }
 };
 
@@ -126,6 +138,14 @@ interface OSState {
   iconPositions: Record<string, { x: number; y: number }>;
   updateIconPosition: (id: string, pos: { x: number; y: number }) => void;
   restoreIconPositions: () => void;
+
+  // Projects data
+  projects: ProjectItem[];
+  isLoadingProjects: boolean;
+  loadProjects: () => Promise<void>;
+  addProject: (project: Omit<ProjectItem, 'id'>) => Promise<void>;
+  updateProject: (id: string, updates: Partial<ProjectItem>) => Promise<void>;
+  deleteProject: (id: string) => Promise<void>;
 
   // Actions
   openWindow: (id: string) => void;
@@ -152,6 +172,40 @@ export const useOSStore = create<OSState>((set, get) => ({
   highestZIndex: 25,
   selectedProjectIndex: null,
   startMenuOpen: false,
+
+  projects: PORTFOLIO_DATA.projects.map((p, idx) => ({ ...p, id: `local-${idx}`, sort_order: idx + 1 })),
+  isLoadingProjects: false,
+
+  loadProjects: async () => {
+    set({ isLoadingProjects: true });
+    try {
+      const projects = await projectService.getProjects();
+      set({ projects, isLoadingProjects: false });
+    } catch {
+      set({ isLoadingProjects: false });
+    }
+  },
+
+  addProject: async (newProj) => {
+    const created = await projectService.addProject(newProj);
+    set(state => ({
+      projects: [...state.projects, created]
+    }));
+  },
+
+  updateProject: async (id, updates) => {
+    const updated = await projectService.updateProject(id, updates);
+    set(state => ({
+      projects: state.projects.map(p => (p.id === id ? updated : p))
+    }));
+  },
+
+  deleteProject: async (id) => {
+    await projectService.deleteProject(id);
+    set(state => ({
+      projects: state.projects.filter(p => p.id !== id)
+    }));
+  },
 
   isGravityOn: false,
   isMatrixRunning: false,
@@ -287,9 +341,9 @@ export const useOSStore = create<OSState>((set, get) => ({
   },
 
   openProjectDetails: (index: number) => {
-    const project = PORTFOLIO_DATA.projects[index];
+    const { highestZIndex, windows, projects } = get();
+    const project = projects[index];
     if (!project) return;
-    const { highestZIndex, windows } = get();
     const newZ = highestZIndex + 1;
     set({
       selectedProjectIndex: index,

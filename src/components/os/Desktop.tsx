@@ -17,6 +17,7 @@ import { CmdApp } from '../apps/CmdApp';
 import { Rasterizer3DApp } from '../apps/Rasterizer3DApp';
 import { PaintApp } from '../apps/PaintApp';
 import { PongApp } from '../apps/PongApp';
+import { ProjectManagerApp } from '../apps/ProjectManagerApp';
 import { sfx } from '../../hooks/useAudioSynth';
 
 interface PhysicsBody {
@@ -35,6 +36,12 @@ export const Desktop: React.FC = () => {
 
   const iconPositions = useOSStore(state => state.iconPositions);
   const updateIconPosition = useOSStore(state => state.updateIconPosition);
+  const loadProjects = useOSStore(state => state.loadProjects);
+
+  // Load projects from database on mount
+  useEffect(() => {
+    loadProjects();
+  }, [loadProjects]);
 
   // Physics Bodies Map
   const physicsBodiesRef = useRef<Map<string, PhysicsBody>>(new Map());
@@ -274,6 +281,10 @@ export const Desktop: React.FC = () => {
 
       <WindowFrame id="window-pong">
         <PongApp />
+      </WindowFrame>
+
+      <WindowFrame id="window-project-manager">
+        <ProjectManagerApp />
       </WindowFrame>
 
       {/* Start Menu */}
