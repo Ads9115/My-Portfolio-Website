@@ -4,7 +4,8 @@ import { useOSStore } from '../../stores/useOSStore';
 
 export const ProjectDetailModal: React.FC = () => {
   const selectedIndex = useOSStore(state => state.selectedProjectIndex);
-  const project = selectedIndex !== null ? PORTFOLIO_DATA.projects[selectedIndex] : null;
+  const projects = useOSStore(state => state.projects);
+  const project = selectedIndex !== null && selectedIndex < projects.length ? projects[selectedIndex] : null;
 
   if (!project) {
     return <div>Select a project from the Quest Log.</div>;

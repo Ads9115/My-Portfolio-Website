@@ -1,9 +1,9 @@
-import React from 'react';
-import { PORTFOLIO_DATA } from '../../data/portfolioData';
 import { useOSStore } from '../../stores/useOSStore';
 import { sfx } from '../../hooks/useAudioSynth';
 
 export const ProjectsApp: React.FC = () => {
+  const projects = useOSStore(state => state.projects);
+  const isLoadingProjects = useOSStore(state => state.isLoadingProjects);
   const openProjectDetails = useOSStore(state => state.openProjectDetails);
 
   const handleSelect = (index: number) => {
@@ -11,9 +11,13 @@ export const ProjectsApp: React.FC = () => {
     openProjectDetails(index);
   };
 
+  if (isLoadingProjects && projects.length === 0) {
+    return <div style={{ padding: '10px' }}>Loading projects from database...</div>;
+  }
+
   return (
     <>
-      {PORTFOLIO_DATA.projects.map((proj, index) => (
+      {projects.map((proj, index) => (
         <div
           key={index}
           className="project-item interactive"

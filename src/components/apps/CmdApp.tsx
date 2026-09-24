@@ -27,6 +27,7 @@ export const CmdApp: React.FC = () => {
   const isMatrixRunning = useOSStore(state => state.isMatrixRunning);
   const triggerShake = useOSStore(state => state.triggerShake);
   const triggerBlackhole = useOSStore(state => state.triggerBlackhole);
+  const openWindow = useOSStore(state => state.openWindow);
 
   useEffect(() => {
     if (outputRef.current) {
@@ -91,6 +92,24 @@ export const CmdApp: React.FC = () => {
         appendLine('Matrix override initiated.', '#00ffff');
       } else {
         appendLine('Matrix override terminated.', '#ff0000');
+      }
+    } else if (val === 'admin' || val.startsWith('admin')) {
+      const parts = rawVal.trim().split(/\s+/);
+      const pin = parts[1];
+      const adminPin = import.meta.env.VITE_ADMIN_PIN || '1337';
+      if (!pin) {
+        openWindow('window-project-manager');
+        appendLine('Launching Project Manager...', '#00ffff');
+        sfx.open();
+      } else if (pin === adminPin) {
+        sessionStorage.setItem('adarsh_admin_unlocked', 'true');
+        openWindow('window-project-manager');
+        appendLine('AUTHENTICATION SUCCESS: Admin privileges unlocked.', '#00ff00');
+        sfx.open();
+      } else {
+        appendLine('AUTHENTICATION FAILED: Incorrect PIN code.', '#ff0000');
+        sfx.shake();
+        triggerShake();
       }
     } else if (val) {
       appendLine(`'${rawVal}' is not recognized as an internal or external command.`, '#ff0000');
