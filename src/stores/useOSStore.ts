@@ -110,7 +110,7 @@ const INITIAL_WINDOWS: Record<string, WindowState> = {
   },
   'window-project-manager': {
     id: 'window-project-manager',
-    title: 'PROJECT_MGR.EXE',
+    title: 'PROJECT MANAGER',
     icon: '🛠️',
     isOpen: false,
     isMinimized: false,

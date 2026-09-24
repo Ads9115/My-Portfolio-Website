@@ -70,7 +70,7 @@ export const StartMenu: React.FC = () => {
           className="start-item interactive-btn"
           onClick={() => handleItemClick('window-project-manager')}
         >
-          🛠️ Projects.exe
+          🛠️ Project Manager
         </div>
         <div className="start-divider" />
         <div className="start-item interactive-btn" onClick={handleReboot}>
