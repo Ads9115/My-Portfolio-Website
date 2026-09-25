@@ -20,6 +20,17 @@ const INITIAL_WINDOWS: Record<string, WindowState> = {
     size: { width: 480, height: 'auto' },
     zIndex: 10
   },
+  'window-about': {
+    id: 'window-about',
+    title: 'README.exe',
+    icon: '📝',
+    isOpen: false,
+    isMinimized: false,
+    isMaximized: false,
+    position: { x: 300, y: 150 },
+    size: { width: 450, height: 'auto' },
+    zIndex: 14
+  },
   'window-skills': {
     id: 'window-skills',
     title: 'SKILLS.DATABANK',
@@ -107,17 +118,6 @@ const INITIAL_WINDOWS: Record<string, WindowState> = {
     position: { x: 420, y: 80 },
     size: { width: 620, height: 430 },
     zIndex: 19
-  },
-  'window-project-manager': {
-    id: 'window-project-manager',
-    title: 'PROJECT MANAGER',
-    icon: '🛠️',
-    isOpen: false,
-    isMinimized: false,
-    isMaximized: false,
-    position: { x: 260, y: 70 },
-    size: { width: 560, height: 500 },
-    zIndex: 20
   }
 };
 
@@ -133,7 +133,6 @@ interface OSState {
   isMatrixRunning: boolean;
   isShakeMode: boolean;
   isKonamiMode: boolean;
-  isBlackholeMode: boolean;
 
   iconPositions: Record<string, { x: number; y: number }>;
   updateIconPosition: (id: string, pos: { x: number; y: number }) => void;
@@ -162,7 +161,6 @@ interface OSState {
   toggleMatrix: (on?: boolean) => void;
   triggerShake: () => void;
   toggleKonami: () => void;
-  triggerBlackhole: () => void;
 }
 
 export const useOSStore = create<OSState>((set, get) => ({
@@ -211,7 +209,6 @@ export const useOSStore = create<OSState>((set, get) => ({
   isMatrixRunning: false,
   isShakeMode: false,
   isKonamiMode: false,
-  isBlackholeMode: false,
 
   openWindow: (id: string) => {
     const { windows, highestZIndex } = get();
@@ -419,12 +416,5 @@ export const useOSStore = create<OSState>((set, get) => ({
 
   toggleKonami: () => {
     set(state => ({ isKonamiMode: !state.isKonamiMode }));
-  },
-
-  triggerBlackhole: () => {
-    set({ isBlackholeMode: true });
-    setTimeout(() => {
-      window.location.reload();
-    }, 4000);
   }
 }));

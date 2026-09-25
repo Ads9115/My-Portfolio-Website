@@ -26,7 +26,6 @@ export const CmdApp: React.FC = () => {
   const toggleMatrix = useOSStore(state => state.toggleMatrix);
   const isMatrixRunning = useOSStore(state => state.isMatrixRunning);
   const triggerShake = useOSStore(state => state.triggerShake);
-  const triggerBlackhole = useOSStore(state => state.triggerBlackhole);
   const openWindow = useOSStore(state => state.openWindow);
 
   useEffect(() => {
@@ -55,8 +54,7 @@ export const CmdApp: React.FC = () => {
         '- gravity on: Enable window and icon gravity physics',
         '- gravity off: Disable window and icon gravity physics',
         '- shake     : Simulates hardware failure',
-        '- clear     : Clears terminal output',
-        '- blackhole : [CLASSIFIED]'
+        '- clear     : Clears terminal output'
       ].forEach(line => appendLine(line));
     } else if (val === 'clear') {
       setHistory([]);
@@ -82,9 +80,6 @@ export const CmdApp: React.FC = () => {
       triggerShake();
       sfx.shake();
       appendLine('Hardware failure simulated.', '#ffff00');
-    } else if (val === 'blackhole') {
-      appendLine('WARNING: GRAVITY ANOMALY DETECTED.', '#ff0000');
-      triggerBlackhole();
     } else if (val === 'matrix') {
       const nextMatrix = !isMatrixRunning;
       toggleMatrix(nextMatrix);
@@ -94,23 +89,9 @@ export const CmdApp: React.FC = () => {
         appendLine('Matrix override terminated.', '#ff0000');
       }
     } else if (val === 'admin' || val.startsWith('admin')) {
-      const parts = rawVal.trim().split(/\s+/);
-      const pin = parts[1];
-      const adminPin = import.meta.env.VITE_ADMIN_PIN || '1337';
-      if (!pin) {
-        openWindow('window-project-manager');
-        appendLine('Launching Project Manager...', '#00ffff');
-        sfx.open();
-      } else if (pin === adminPin) {
-        sessionStorage.setItem('adarsh_admin_unlocked', 'true');
-        openWindow('window-project-manager');
-        appendLine('AUTHENTICATION SUCCESS: Admin privileges unlocked.', '#00ff00');
-        sfx.open();
-      } else {
-        appendLine('AUTHENTICATION FAILED: Incorrect PIN code.', '#ff0000');
-        sfx.shake();
-        triggerShake();
-      }
+      appendLine('ACCESS DENIED. Admin subsystem has been permanently disabled for security.', '#ff0000');
+      sfx.shake();
+      triggerShake();
     } else if (val) {
       appendLine(`'${rawVal}' is not recognized as an internal or external command.`, '#ff0000');
     }

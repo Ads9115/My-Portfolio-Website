@@ -43,6 +43,7 @@ export interface ProjectData {
   desc: string;
   link: string;
   linkLabel?: string;
+  imageUrl?: string;
 }
 
 export interface SkillCategory {

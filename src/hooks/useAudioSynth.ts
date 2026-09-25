@@ -1,6 +1,7 @@
 // Web Audio API chiptune synthesizer
 
 let audioCtx: AudioContext | null = null;
+let isMuted = false;
 
 function getAudioContext(): AudioContext | null {
   if (typeof window === 'undefined') return null;
@@ -20,6 +21,7 @@ function getAudioContext(): AudioContext | null {
 
 export function playTone(freq: number, type: OscillatorType, duration: number, vol = 0.1) {
   try {
+    if (isMuted) return;
     const ctx = getAudioContext();
     if (!ctx) return;
     const osc = ctx.createOscillator();
@@ -62,3 +64,12 @@ export const sfx = {
   pongAiScore: () => playTone(180, 'sawtooth', 0.08, 0.05),
   paintClear: () => playTone(200, 'sawtooth', 0.1, 0.1)
 };
+
+export function toggleMute(): boolean {
+  isMuted = !isMuted;
+  return isMuted;
+}
+
+export function getIsMuted(): boolean {
+  return isMuted;
+}

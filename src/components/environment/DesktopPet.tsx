@@ -46,6 +46,9 @@ export const DesktopPet: React.FC = () => {
       } as React.CSSProperties}
       onClick={handleBoop}
       title="Boop me!"
-    />
+    >
+      {/* Invisible hitbox to cover the box-shadow body */}
+      <div style={{ position: 'absolute', top: -10, left: -10, width: 60, height: 60 }} />
+    </div>
   );
 };

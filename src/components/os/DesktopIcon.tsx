@@ -57,7 +57,11 @@ export const DesktopIcon: React.FC<DesktopIconProps> = ({ config }) => {
 
     if (!dragStartRef.current.moved) {
       sfx.click();
-      openWindow(config.targetWindowId);
+      if (config.id === 'icon-resume') {
+        window.open('/resume.txt', '_blank');
+      } else {
+        openWindow(config.targetWindowId);
+      }
     }
   };
 

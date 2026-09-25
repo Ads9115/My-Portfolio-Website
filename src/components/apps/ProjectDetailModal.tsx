@@ -17,6 +17,11 @@ export const ProjectDetailModal: React.FC = () => {
       <p style={{ borderBottom: '2px solid var(--win-gray)', paddingBottom: '10px' }}>
         <strong>Tech Stack:</strong> <span>{project.tech || 'Various'}</span>
       </p>
+      {project.imageUrl && (
+        <div style={{ margin: '15px 0', border: '2px solid var(--win-gray)', padding: '4px', background: '#000' }}>
+          <img src={project.imageUrl} alt={project.title} style={{ width: '100%', display: 'block', imageRendering: 'pixelated' }} />
+        </div>
+      )}
       <div style={{ fontSize: '22px', lineHeight: 1.4, marginTop: '15px' }}>{project.desc}</div>
       <a
         href={project.link}

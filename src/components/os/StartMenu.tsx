@@ -50,9 +50,21 @@ export const StartMenu: React.FC = () => {
         </div>
         <div
           className="start-item interactive-btn"
+          onClick={() => handleItemClick('window-skills')}
+        >
+          ⚙️ Skills
+        </div>
+        <div
+          className="start-item interactive-btn"
           onClick={() => handleItemClick('window-projects')}
         >
           🌍 Quest Log
+        </div>
+        <div
+          className="start-item interactive-btn"
+          onClick={() => handleItemClick('window-contact')}
+        >
+          ✉️ Contact
         </div>
         <div
           className="start-item interactive-btn"
@@ -62,9 +74,27 @@ export const StartMenu: React.FC = () => {
         </div>
         <div
           className="start-item interactive-btn"
+          onClick={() => handleItemClick('window-cube')}
+        >
+          🧊 3D Renderer
+        </div>
+        <div
+          className="start-item interactive-btn"
+          onClick={() => handleItemClick('window-paint')}
+        >
+          🎨 Paint.exe
+        </div>
+        <div
+          className="start-item interactive-btn"
           onClick={() => handleItemClick('window-pong')}
         >
           🕹️ Pong.exe
+        </div>
+        <div
+          className="start-item interactive-btn"
+          onClick={() => handleItemClick('window-about')}
+        >
+          📝 README.exe
         </div>
         <div className="start-divider" />
         <div className="start-item interactive-btn" onClick={handleReboot}>

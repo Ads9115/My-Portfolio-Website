@@ -17,7 +17,7 @@ import { CmdApp } from '../apps/CmdApp';
 import { Rasterizer3DApp } from '../apps/Rasterizer3DApp';
 import { PaintApp } from '../apps/PaintApp';
 import { PongApp } from '../apps/PongApp';
-import { ProjectManagerApp } from '../apps/ProjectManagerApp';
+import { AboutApp } from '../apps/AboutApp';
 import { sfx } from '../../hooks/useAudioSynth';
 
 interface PhysicsBody {
@@ -29,7 +29,6 @@ interface PhysicsBody {
 
 export const Desktop: React.FC = () => {
   const isGravityOn = useOSStore(state => state.isGravityOn);
-  const isBlackholeMode = useOSStore(state => state.isBlackholeMode);
   const toggleKonami = useOSStore(state => state.toggleKonami);
   const updateWindowPosition = useOSStore(state => state.updateWindowPosition);
   const windows = useOSStore(state => state.windows);
@@ -42,6 +41,7 @@ export const Desktop: React.FC = () => {
   useEffect(() => {
     loadProjects();
   }, [loadProjects]);
+
 
   // Physics Bodies Map
   const physicsBodiesRef = useRef<Map<string, PhysicsBody>>(new Map());
@@ -225,17 +225,7 @@ export const Desktop: React.FC = () => {
   }, [isGravityOn, windows, iconPositions, updateWindowPosition, updateIconPosition]);
 
   return (
-    <div
-      id="desktop"
-      style={
-        isBlackholeMode
-          ? {
-              transition: 'all 3s cubic-bezier(0.5,0,0.5,1)',
-              transform: 'rotate(720deg) scale(0)'
-            }
-          : undefined
-      }
-    >
+    <div id="desktop">
       <SkyEnvironment />
       <UFO />
       <DesktopPet />
@@ -283,8 +273,8 @@ export const Desktop: React.FC = () => {
         <PongApp />
       </WindowFrame>
 
-      <WindowFrame id="window-project-manager">
-        <ProjectManagerApp />
+      <WindowFrame id="window-about">
+        <AboutApp />
       </WindowFrame>
 
       {/* Start Menu */}

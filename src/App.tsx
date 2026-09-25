@@ -1,11 +1,13 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useOSStore } from './stores/useOSStore';
 import { CRTOverlay } from './components/os/CRTOverlay';
 import { Desktop } from './components/os/Desktop';
 import { Taskbar } from './components/os/Taskbar';
 import { sfx } from './hooks/useAudioSynth';
+import { BootScreen } from './components/apps/BootScreen';
 
 export const App: React.FC = () => {
+  const [booting, setBooting] = useState(true);
   const isKonamiMode = useOSStore(state => state.isKonamiMode);
   const isShakeMode = useOSStore(state => state.isShakeMode);
 
@@ -40,6 +42,7 @@ export const App: React.FC = () => {
 
   return (
     <>
+      {booting && <BootScreen onBootComplete={() => setBooting(false)} />}
       <CRTOverlay />
       <Desktop />
       <Taskbar />

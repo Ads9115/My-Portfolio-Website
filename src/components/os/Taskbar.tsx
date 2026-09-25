@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useOSStore } from '../../stores/useOSStore';
-import { sfx } from '../../hooks/useAudioSynth';
+import { sfx, toggleMute, getIsMuted } from '../../hooks/useAudioSynth';
 
 export const Taskbar: React.FC = () => {
   const startMenuOpen = useOSStore(state => state.startMenuOpen);
@@ -9,6 +9,9 @@ export const Taskbar: React.FC = () => {
   const activeWindowId = useOSStore(state => state.activeWindowId);
   const focusWindow = useOSStore(state => state.focusWindow);
   const minimizeWindow = useOSStore(state => state.minimizeWindow);
+
+  // Audio mute
+  const [muted, setMuted] = useState(getIsMuted());
 
   // Clock
   const [timeStr, setTimeStr] = useState('');
@@ -87,7 +90,21 @@ export const Taskbar: React.FC = () => {
         })}
       </div>
 
-      <div id="clock">{timeStr}</div>
+      <div id="clock" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <button
+          className="interactive-btn"
+          onClick={(e) => { e.stopPropagation(); setMuted(toggleMute()); }}
+          style={{
+            background: 'transparent', border: 'none', cursor: 'pointer',
+            fontSize: '18px', color: muted ? '#ff4444' : '#fff7dd',
+            padding: '0 4px', filter: muted ? 'drop-shadow(0 0 4px #ff4444)' : 'drop-shadow(0 0 4px #fff7dd)'
+          }}
+          title={muted ? 'Unmute Sound' : 'Mute Sound'}
+        >
+          {muted ? '🔇' : '🔊'}
+        </button>
+        {timeStr}
+      </div>
     </div>
   );
 };
